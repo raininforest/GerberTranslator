@@ -203,6 +203,16 @@ void Main_window::open_slot()
     List_of_files = OpnDlg->getOpenFileNames(this, "Выберите файлы для загрузки", open_path_ini, "");
     if (List_of_files.size())  //если список не пуст(когда ничего не выбрал), то..
     {
+        int outlines_counter = 0;
+        for (int i=0; i<List_of_files.size(); i++){
+            if (List_of_files.at(i).contains(".board")){
+                outlines_counter++;
+                if (outlines_counter>1){
+                    List_of_files.removeAt(i);
+                }
+            }
+        }
+
         ui->listWidget->clear();
         ui->listWidget->addItems(List_of_files);
         ui->listWidget->setEnabled(true);        
@@ -272,7 +282,6 @@ void Main_window::save_slot()
         //  поиск в списке загруженных герберов файла с ".board",
         //  чтобы рассчитать размеры (платы) изображения для всех загруженных герберов по контуру.
         for (int i=0;i<ui->listWidget->count();i++) {
-//            if ((ui->listWidget->item(i)->text().contains(".board"))||(ui->listWidget->item(i)->text().contains(".panel"))){
               if (ui->listWidget->item(i)->text().contains(".board")){
 
                 p = new Processor(1);
@@ -334,7 +343,6 @@ void Main_window::save_slot()
 
             //  Цикл обработки всех загруженных файлов, кроме файла контура - формирование изображения
             for (int i=0; i<ui->listWidget->count(); i++) {
-//                if (!((ui->listWidget->item(i)->text().contains(".board"))||(ui->listWidget->item(i)->text().contains(".panel")))){
                if (!(ui->listWidget->item(i)->text().contains(".board"))){
 
                     p = new Processor(0);

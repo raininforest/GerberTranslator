@@ -413,9 +413,9 @@ int Processor::process(){
                 }
                 else {
                     if (command==2) {
-                        qDebug()<< "coordinate data without operation code detected...";
-                        qDebug()<< str.contains("D") << "command:" <<command;
-                        qDebug()<< "number of string:0" << i;
+//                        qDebug()<< "coordinate data without operation code detected...";
+//                        qDebug()<< str.contains("D") << "command:" <<command;
+//                        qDebug()<< "number of string:0" << i;
                     }
 
 //                    command = current_d_code;               //  deprecated mentor...

@@ -230,6 +230,11 @@
       <height>21</height>
      </rect>
     </property>
+    <property name="font">
+     <font>
+      <pointsize>9</pointsize>
+     </font>
+    </property>
     <property name="text">
      <string>dpi</string>
     </property>
@@ -294,7 +299,7 @@
      <x>0</x>
      <y>0</y>
      <width>820</width>
-     <height>22</height>
+     <height>20</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
