@@ -441,12 +441,34 @@ void Main_window::process_finished(){
         ui->comboBox_dpi->setEnabled(true);
         ui->lineEdit->setEnabled(true);
 
-        //
-        //  !!! for Windows explorer ONLY
-        //
         if (ui->action_7->isChecked()&&at_least_one_done) {
-            QProcess process(this);
-            process.startDetached("explorer " + ui->lineEdit->text().replace(('/'),('\\')));
+
+            QString local_ver_file_name = "gt_version";
+            QString platform;
+
+            QFile loc_version_file(local_ver_file_name);
+            if(!loc_version_file.open(QIODevice::ReadOnly | QIODevice::Text)){
+                qDebug()<<"Невозможно открыть локальный файл версии!";
+                //сообщение об ошибке
+            }
+            while (!loc_version_file.atEnd()){
+                QByteArray str = loc_version_file.readLine().trimmed();
+                // читаю ОС
+                if (str.contains("platform")){
+                    platform = str.right(str.size()-(str.indexOf('=')+1));
+                    loc_version_file.close();
+                    break;
+                }
+            }
+
+            if (platform=="windows"){
+                QProcess process(this);
+                process.startDetached("explorer " + ui->lineEdit->text().replace(('/'),('\\')));
+            }
+            else if (platform=="linux") {
+                QProcess process(this);
+                process.startDetached("nautilus " + ui->lineEdit->text());
+            }
         }
         threads.clear();
     }
