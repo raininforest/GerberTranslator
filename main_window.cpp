@@ -311,7 +311,7 @@ void Main_window::save_slot()
                 return_code = future->result();
                 count_of_finished_processes++;
                 if ((return_code)>-1){
-                    ui->listWidget->item(i)->setTextColor("green");
+                    ui->listWidget->item(i)->setForeground(Qt::green);
                     at_least_one_done = true;
                     if (ui->listWidget->count() == 1) {
                         msgBox.setWindowTitle("Gerber-транслятор");
@@ -321,7 +321,7 @@ void Main_window::save_slot()
                 }
                 else {
                     everything_was_ok = false;
-                    ui->listWidget->item(i)->setTextColor("red");
+                    ui->listWidget->item(i)->setForeground(Qt::red);
                     QString err_msg;
                     if (return_code == -3){
                         err_msg = "Ошибка!\nФайл " + ui->listWidget->item(i)->text() + " не обработан.\nВозможно, файл слишком большой и недостаточно памяти для его обработки.";
@@ -393,12 +393,12 @@ void Main_window::process_finished(){
     return_code = threads.at(i).future_handle->result();
 
     if ((return_code)>-1){
-        ui->listWidget->item(threads.at(i).widget_index)->setTextColor("green");
+        ui->listWidget->item(threads.at(i).widget_index)->setForeground(Qt::green);
         at_least_one_done = true;
     }
     else {
         everything_was_ok = false;
-        ui->listWidget->item(threads.at(i).widget_index)->setTextColor("red");
+        ui->listWidget->item(threads.at(i).widget_index)->setForeground(Qt::red);
         QString err_msg;
         if (return_code == -3){
             err_msg = "Ошибка!\nФайл " + ui->listWidget->item(threads.at(i).widget_index)->text() + " не обработан.\nВозможно, файл слишком большой и недостаточно памяти для его обработки.";

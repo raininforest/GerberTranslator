@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
     // запуск главного окна
     QApplication a(argc, argv);
     Main_window w;
-    w.setGeometry(500,300,820,480);
+    w.setGeometry(200,200,820,480);
     w.setFixedSize(820,480);
     w.show();
 
