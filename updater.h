@@ -2,6 +2,7 @@
 #define UPDATER_H
 
 #include <QFile>
+#include <QFileInfo>
 #include <QString>
 #include <QDebug>
 #include <QProcess>

@@ -189,7 +189,7 @@ Main_window::~Main_window()
 
 void Main_window::show_about(){
 
-    QMessageBox::about(this, "О программе", "Gerber-транслятор.\n\nВерсия: 1.5.\nДата релиза: 19.07.2019\nАвтор: Велеско С.А.");
+    QMessageBox::about(this, "О программе", "Gerber-транслятор.\n\nВерсия: 1.6.\nДата релиза: 19.07.2019\nАвтор: Велеско С.А.");
 
 }
 

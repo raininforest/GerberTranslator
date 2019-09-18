@@ -8,15 +8,18 @@ int update(){
     QString bit="64";
     QString extension="";
 
-    QString local_ver_file_name;
-    QString local_version_text="";
-    QString local_app_path;
-    QString updater_path;
-    QString actual_path;
-    QString actual_ver_file_name;
-    QString actual_version_text="";
-    QString actual_app_path;
+    QString local_ver_file_name;    //имя локального файла версии (не полный путь)
+    QString local_version_text="";  //текстовый номер локальной версии
+    QString local_app_name;         //имя локального приложения, подлежащего обновлению (не полный путь)
+    QFileInfo local_app;            //инфа по локального приложению (нужен абсолютный путь для передачи в командную строку)
+    QString updater_name;           //имя приложения апдейтера (не полный путь)
+    QFileInfo updater;              //инфа по апдейтеру (нужен абсолютный путь для передачи в командную строку)
+    QString actual_path;            //путь к расположению с новыми версиями (путь\платформа\битность\.ехе)
+    QString actual_ver_file_name;   //полный путь к файлу версии нового приложения
+    QString actual_version_text=""; //текстовый номер новой версии
+    QString actual_app_path;        //полный путь к файлу новой версии приложения
 
+    qDebug()<<"Проверка наличия обновления...";
     local_ver_file_name = "gt_version";
     QFile loc_version_file(local_ver_file_name);
     if(!loc_version_file.open(QIODevice::ReadOnly | QIODevice::Text)){
@@ -66,15 +69,19 @@ int update(){
     }
     loc_version_file.close();
 
-    local_app_path = "gerber_translator" + extension;
-    updater_path = "gt_u" + extension;
+    local_app_name = "gerber_translator" + extension;
+    updater_name = "gt_u" + extension;
+    updater.setFile(updater_name);
+    if (!updater.exists()){
+        qDebug()<<"Апдейтер gt_u не найден!";
+        return -1;
+    }
 
     // Читаем путь к папке-источнику из файла path
     QFile path_file("path");
     if(!path_file.open(QIODevice::ReadOnly | QIODevice::Text)){
         qDebug()<<"Не удалось открыть файл path!";
         return -1;
-        // сообщение об ошибке
     }
     while (!path_file.atEnd()){
         actual_path = path_file.readLine().trimmed();
@@ -130,15 +137,19 @@ int update(){
         //argv[3] - путь к локальной версии программы
         //argv[4] - путь к актуальной версии программы
         QStringList arguments;
-        arguments.append(local_ver_file_name);
-        arguments.append(actual_version_text);
-        arguments.append(local_app_path);
-        arguments.append(actual_app_path);
+        arguments.append(local_ver_file_name);  //т.к. апдейтер в этой же папке, полный путь не требуется
+        arguments.append(actual_version_text);  //номер актуальной версии (чтобы не открывать еще раз файл. запишется после обновления в локальный файл версии)
+        arguments.append(local_app_name);       //т.к. апдейтер в этой же папке, полный путь не требуется
+        arguments.append(actual_app_path);      //полный путь
         // запуск апдейтера
-        QProcess updater(nullptr);
-        updater.startDetached(updater_path, arguments);
+        QProcess updater_process(nullptr);
+        updater_process.startDetached(updater.absoluteFilePath(), arguments);
         // выход из главной программы с положительным кодом
         return 1;
     }
+    else if (actual_version==local_version){
+        return 2; //обновление не требуется
+    }
+    qDebug()<<"Ошибка! номер локальной больше, чем номер актуальной версии!";
     return -1;
 }
