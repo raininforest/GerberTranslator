@@ -128,6 +128,7 @@ int Processor::process(){
         }
     }
     if (!((count_of_FS==1)&&(count_of_MO==1))){
+        qDebug()<<"Gerber-файл " << name_of_gerber_file << " не содержит команды %FS или %MO (либо содержит больше одной) и не может быть обработан!";
         finished();
         return -2;  //  file is invalid!
     }
@@ -166,6 +167,7 @@ int Processor::process(){
     painter.begin(&pxmp);
     if (!painter.isActive()){
         // Ошибка
+        qDebug()<<"QPainter не запущен. Gerber-файл " << name_of_gerber_file << " не может быть обработан!";
         finished();
         return -3;
     }
@@ -219,11 +221,12 @@ int Processor::process(){
 
                         //  проверка на выход за пределы допустимых значений количества разрядов...
                         if ((frmt_x_int>7)||(frmt_x_dec>6)||(frmt_y_int>7)||(frmt_y_dec>6)||((str.mid(12,1)!="%"))){
+                            qDebug()<<"Неверный формат команды FS. Gerber-файл " << name_of_gerber_file << " не может быть обработан!";
                             finished();
                             return -2;
                         }
 
-                    };break;
+                    }break;
                     case MO :{
                     //----------
                     //   MO
@@ -233,10 +236,11 @@ int Processor::process(){
                             case MM : unit = MM; break;
                             case IN : unit = IN; break;
                             default :
+                            qDebug()<<"Неверные единицы измерения в команде MO. Gerber-файл " << name_of_gerber_file << " не может быть обработан!";
                             finished();
                             return -2;
                         }
-                    };break;
+                    }break;
                     case AD :{
                     //----------
                     //   AD
@@ -256,6 +260,7 @@ int Processor::process(){
                                 d_code_number_of_aperture.append(str.at(i));
                             }
                             else if (d_code_number_of_aperture.isEmpty()){
+                                qDebug()<< "Пустой d-code в команде AD. Gerber-файл " << name_of_gerber_file << " не может быть обработан!";
                                 finished();
                                 return -2;
                             }
@@ -293,6 +298,7 @@ int Processor::process(){
                                 }
                             }
                             if (am_pointer == nullptr){
+                                qDebug()<<"Обнаружен пустой элемент в словаре макро-апертур. Gerber-файл " << name_of_gerber_file << " не может быть обработан!";
                                 finished();
                                 return -2;
                             }
@@ -303,7 +309,7 @@ int Processor::process(){
                         Aperture *new_aperture = new Aperture(d_code_number_of_aperture.toInt(), name_of_aperture_template, type_of_aperture_template, modifiers, am_pointer);
                         new_aperture->create(dpi);
                         aperture_dictionary.append(new_aperture);
-                    };break;
+                    }break;
                     //----------
                     //   AM
                     //----------
@@ -317,6 +323,7 @@ int Processor::process(){
                             name_of_am_template.append(str.at(j));
                         }
                         if (name_of_am_template.isEmpty()){
+                            qDebug()<<"Не удалось прочитать имя макро-шаблона в команде AM. Gerber-файл " << name_of_gerber_file << " не может быть обработан!";
                             finished();
                             return -2;
                         }
@@ -347,13 +354,15 @@ int Processor::process(){
                         //
                         am_template *new_am_template = new am_template(name_of_am_template,data_blocks);
                         am_template_dictionary.append(new_am_template);
-//                        for (int j =0; j<data_blocks.size();j++) {
-////                            log << time.currentTime().toString() << " AM command: AM data block: " << new_am_template->get_data_blocks().at(j) << "\n";
-//                        }
-                    };break;
+                    }break;
                     case AB :{
-                        //реализация AB
-                    };break;
+
+
+                    //реализация AB
+
+
+
+                    }break;
                     case LP :{
                     //----------
                     //   LP
@@ -367,10 +376,11 @@ int Processor::process(){
                             painter.setBrush(Qt::black);
                         }
                         else {
+                            qDebug()<<"Неверный формат команды LP. Gerber-файл " << name_of_gerber_file << " не может быть обработан!";
                             finished();
                             return -2;
                         }
-                    };break;
+                    }break;
                     case LM :{
                     //----------
                     //   LM
@@ -382,22 +392,47 @@ int Processor::process(){
                             case Y : mirroring = Y; break;
                             case XY : mirroring = XY; break;
                         }
-                    };break;
+                    }break;
                     case LR :{
-                        //реализация LR
-                    };break;
+
+
+                    //реализация LR
+
+
+
+                    }break;
                     case LS :{
-                        //реализация LS
-                    };break;
+
+
+                    //реализация LS
+
+
+
+                    }break;
                     case TF :{
-                        //не влияет на изображение
-                    };break;
+
+
+                    //не влияет на изображение
+
+
+
+                    }break;
                     case TO :{
-                        //реализация TO
-                    };break;
+
+
+                    //реализация TO
+
+
+
+                    }break;
                     case TD :{
-                        //реализация TD
-                    };break;
+
+
+                    //реализация TD
+
+
+
+                    }break;
                 }//end of switch
             }//end of if (str.contains("%"))
 
@@ -559,6 +594,7 @@ int Processor::process(){
                             }
                             else {
                                 //  Ошибка, режим квадранта не задан!
+                                qDebug()<<"Ошибка! Quadrant mode не задан. Gerber-файл " << name_of_gerber_file << " не может быть обработан!";
                                 finished();
                                 return -1;
                             }
@@ -641,12 +677,14 @@ int Processor::process(){
                             }
                             else {
                                 //  Ошибка, режим квадранта не задан!
+                                qDebug()<<"Ошибка! Quadrant mode не задан. Gerber-файл " << name_of_gerber_file << " не может быть обработан!";
                                 finished();
                                 return -1;
                             }
                         }
                         else {
                             //  Ошибка, режим интерполяции не задан!
+                            qDebug()<<"Ошибка! Interpolation mode не задан. Gerber-файл " << name_of_gerber_file << " не может быть обработан!";
                             finished();
                             return -1;
                         }
@@ -657,7 +695,7 @@ int Processor::process(){
                         current_y = command_y;
 
 
-                    };break;
+                    }break;
                     case D02 :{
                     //----------
                     //   D02
@@ -684,7 +722,7 @@ int Processor::process(){
                         }
                         current_y = trim_D_argument(y_val, frmt_y_int, frmt_y_dec, minus);
                     }
-                    };break;
+                    }break;
                     case D03 :{
                     //----------
                     //   D03
@@ -712,7 +750,7 @@ int Processor::process(){
 
                         current_aperture->draw_me(current_x,current_y,&painter);
 
-                    };break;
+                    }break;
                     case Dnn :{
                     //----------
                     //   Dnnn
@@ -735,7 +773,7 @@ int Processor::process(){
                             global_pen.setWidth(current_aperture->get_std_circ_dia_in_px(dpi));
                             painter.setPen(global_pen);
                         //**************************************************************
-                    };break;
+                    }break;
                 }//end of switch
             }//end of else if (str.contains("D"))
             //---------------------------------------------------------------
@@ -750,31 +788,31 @@ int Processor::process(){
                     //   G01
                     //----------
                         interpolation_mode = LINEAR;
-                    };break;
+                    }break;
                     case G02 :{
                     //----------
                     //   G02
                     //----------
                         interpolation_mode = CLOCKWISE_CIRCULAR;
-                    };break;
+                    }break;
                     case G03 :{
                     //----------
                     //   G03
                     //----------
                         interpolation_mode = COUNTERCLOCKWISE_CIRCULAR;
-                    };break;
+                    }break;
                     case G74 :{
                     //----------
                     //   G74
                     //----------
                         quadrant_mode = SINGLE_QUADRANT;
-                    };break;
+                    }break;
                     case G75 :{
                     //----------
                     //   G75
                     //----------
                         quadrant_mode = MULTI_QUADRANT;
-                    };break;
+                    }break;
                     case G36 :{
 
                         //
@@ -958,6 +996,7 @@ int Processor::process(){
                                             }
                                             else {
                                                 //  Ошибка, режим квадранта не задан!
+                                                qDebug()<<"Ошибка! Quadrant mode в регионе не задан. Gerber-файл " << name_of_gerber_file << " не может быть обработан!";
                                                 finished();
                                                 return -1;
                                             }
@@ -1042,19 +1081,21 @@ int Processor::process(){
                                             }
                                             else {
                                                 //  Ошибка, режим квадранта не задан!
+                                                qDebug()<<"Ошибка! Quadrant mode в регионе не задан. Gerber-файл " << name_of_gerber_file << " не может быть обработан!";
                                                 finished();
                                                 return -1;
                                             }
                                         }
                                         else {
                                             //  Ошибка, режим интерполяции не задан!
+                                            qDebug()<<"Ошибка! Interpolation mode в регионе не задан. Gerber-файл " << name_of_gerber_file << " не может быть обработан!";
                                             finished();
                                             return -1;
                                         }
                                         //  обновление текущей точки координат..
                                         current_x = command_x;
                                         current_y = command_y;
-                                        };break;
+                                        }break;
                                         case D02:{
                                             //
                                             //   D02 for regions
@@ -1086,7 +1127,7 @@ int Processor::process(){
                                                 }
                                                 current_y = trim_D_argument(y_val, frmt_y_int, frmt_y_dec, minus);
                                             }
-                                        };break;
+                                        }break;
                                     }//end of switch
                                 }//end of if (str.contains("D"))
                                 else if (str.contains("G")) {
@@ -1098,31 +1139,31 @@ int Processor::process(){
                                         //   G01
                                         //----------
                                             interpolation_mode = LINEAR;
-                                        };break;
+                                        }break;
                                         case G02 :{
                                         //----------
                                         //   G02
                                         //----------
                                             interpolation_mode = CLOCKWISE_CIRCULAR;
-                                        };break;
+                                        }break;
                                         case G03 :{
                                         //----------
                                         //   G03
                                         //----------
                                             interpolation_mode = COUNTERCLOCKWISE_CIRCULAR;
-                                        };break;
+                                        }break;
                                         case G74 :{
                                         //----------
                                         //   G74
                                         //----------
                                             quadrant_mode = SINGLE_QUADRANT;
-                                        };break;
+                                        }break;
                                         case G75 :{
                                         //----------
                                         //   G75
                                         //----------
                                             quadrant_mode = MULTI_QUADRANT;
-                                        };break;
+                                        }break;
                                     }//end of switch
                                 }//end of if (str.contains("G"))
 
@@ -1151,14 +1192,14 @@ int Processor::process(){
                             }// end of while (!end_of_contour)
                         }// end of while (!end_of_region)
 
-                    };break;
+                    }break;
                     case M02 :{
                     //----------
                     //   M02
                     //----------
                         //успешное достижение конца файла
 //                        log << time.currentTime().toString() << " End of file!";
-                    };break;
+                    }break;
 //                    default: log << time.currentTime().toString() << " Invalid command format: " << str_command.toUtf8() << "\n";
                 }//end of switch
             }//end of else if (str.contains("G")||str.contains("M"))
@@ -1180,12 +1221,14 @@ int Processor::process(){
     file.open(QIODevice::WriteOnly);
     if (image_format == "bmp"){
         if (!pxmp.save(&file,"BMP")) {
+            qDebug()<<"Ошибка! Gerber-файл " << name_of_gerber_file << ". Не удалось сохранить изображение!";
             finished();
             return -4;
         }         //  сохранения изображения в файле в формате BMP
     }
     else if (image_format == "png"){
         if (!pxmp.save(&file,"PNG")){
+            qDebug()<<"Ошибка! Gerber-файл " << name_of_gerber_file << ". Не удалось сохранить изображение!";
             finished();
             return -4;
         }         //  сохранения изображения в файле в формате PNG
