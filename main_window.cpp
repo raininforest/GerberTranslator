@@ -371,7 +371,6 @@ void Main_window::save_slot()
             ui->open_button->setEnabled(true);
             ui->save_button->setEnabled(true);
             ui->actionSave->setEnabled(true);
-            ui->progressBar->setEnabled(true);
             ui->start_button->setEnabled(true);
             ui->comboBox_dpi->setEnabled(true);
             ui->comboBox_format->setEnabled(true);
@@ -528,14 +527,13 @@ void Main_window::dropEvent(QDropEvent *event){
     ui->listWidget->setEnabled(true);
     ui->save_button->setEnabled(true);
     ui->actionSave->setEnabled(true);
-    ui->progressBar->setEnabled(true);
     ui->start_button->setEnabled(true);
     ui->comboBox_dpi->setEnabled(true);
     ui->comboBox_format->setEnabled(true);
     ui->label->setEnabled(true);
     ui->lineEdit->setEnabled(true);
 
-    ui->progressBar->setRange(1,ui->listWidget->count());
+    ui->progressBar->setRange(0,ui->listWidget->count());
     ui->progressBar->setValue(ui->progressBar->minimum());
 
     //  вызов слота save_slot(), если включена мгновенная трансляция
