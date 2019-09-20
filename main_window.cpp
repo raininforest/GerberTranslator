@@ -262,6 +262,11 @@ void Main_window::save_slot()
 
     if ((QDir(ui->lineEdit->text()).exists())&&(!ui->lineEdit->text().isEmpty())){
 
+        // установка цвета файлов в исходный черный
+        for (int i=0; i<ui->listWidget->count(); i++){
+            ui->listWidget->item(i)->setForeground(Qt::black);
+        }
+
         // блокировка некоторого gui на время выполнения
         ui->start_button->setEnabled(false);
         ui->open_button->setEnabled(false);
@@ -335,6 +340,7 @@ void Main_window::save_slot()
                     msgBox.setWindowTitle("Gerber-транслятор");
                     msgBox.setText(err_msg);
                     msgBox.exec();
+                    break;
                 }
                 ui->progressBar->setValue((ui->progressBar->value()) + 1);  //  приращение индикатора прогресса
                 break; // т.к. нашелся контур платы - выход из цикла
@@ -342,8 +348,10 @@ void Main_window::save_slot()
             }
 
             //  Цикл обработки всех загруженных файлов, кроме файла контура - формирование изображения
+            //  Если обработка файла контура прошла успешно
+        if ((at_least_one_done)||(ui->action_6->isChecked())){
             for (int i=0; i<ui->listWidget->count(); i++) {
-               if (!(ui->listWidget->item(i)->text().contains(".board"))){
+                if (!(ui->listWidget->item(i)->text().contains(".board"))){
 
                     p = new Processor(0);
                     p->set_frame_thickness(frame_thickness_ini.toDouble());
@@ -367,13 +375,33 @@ void Main_window::save_slot()
                     *future = QtConcurrent::run(p,&Processor::process);
                 }//end of if
             }//end of for
+        }
+        else {
+            for (int i=0; i<ui->listWidget->count();i++) {
+                ui->listWidget->item(i)->setForeground(Qt::red);
+            }
+            msgBox.setWindowTitle("Gerber-транслятор");
+            msgBox.setText("Файлы не будут обработаны, т.к. не обработан файл контура!");
+            msgBox.exec();
+            ui->listWidget->setEnabled(true);
+            ui->open_button->setEnabled(true);
+            ui->save_button->setEnabled(true);
+            ui->actionSave->setEnabled(true);
+            ui->progressBar->setEnabled(true);
+            ui->start_button->setEnabled(true);
+            ui->comboBox_dpi->setEnabled(true);
+            ui->comboBox_format->setEnabled(true);
+            ui->label->setEnabled(true);
+            ui->lineEdit->setEnabled(true);
+        }
+
 
     } // end of if
     else {
-    //  Выдача сообщения об ошибке
-    msgBox.setWindowTitle("Gerber-транслятор");
-    msgBox.setText("Указанный каталог не существует!");
-    msgBox.exec();
+        //  Выдача сообщения об ошибке
+        msgBox.setWindowTitle("Gerber-транслятор");
+        msgBox.setText("Указанный каталог не существует!");
+        msgBox.exec();
     }
 
 }   //end of slot
@@ -513,8 +541,12 @@ void Main_window::dropEvent(QDropEvent *event){
     }
     ui->listWidget->clear();
 
+    QString item_path_text="";
     for (int i=0; i<urls.size(); i++) {
-        ui->listWidget->addItem(urls.at(i).toString(QUrl::PreferLocalFile));
+        item_path_text = urls.at(i).toString(QUrl::PreferLocalFile);
+        item_path_text.replace("%5B","[");
+        item_path_text.replace("%5D","]");
+        ui->listWidget->addItem(item_path_text);
     }
     ui->listWidget->setEnabled(true);
     ui->save_button->setEnabled(true);
