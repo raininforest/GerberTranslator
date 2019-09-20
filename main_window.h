@@ -65,6 +65,7 @@ private:
 
     QList<thread_struct> threads;           // список потоков для обработки
     int count_of_finished_processes = 0;    // счетчик завершившихся потоков
+    int return_code=-1;
 
     Ui::Main_window *ui;
     QMessageBox msgBox;
