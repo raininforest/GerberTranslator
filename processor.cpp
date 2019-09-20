@@ -4,6 +4,7 @@
 #include <QtMath>
 #include <cstdio>
 #include <QDebug>
+#include <QMap>
 #include "processor.h"
 
 Processor::Processor(const bool is_outline)
@@ -90,6 +91,7 @@ int Processor::load_file(){
 
     QFile file(name_of_gerber_file);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)){
+        qDebug()<<"Gerber-файл " << name_of_gerber_file << " не может быть открыт! Возможно он не существует.";
         //сообщение об ошибке чтения файла
         return -1;
     }
@@ -110,11 +112,17 @@ int Processor::process(){
 //  return -3   : painter не запустился. возможно слишком большой файл. поможет версия 64 бит
 //  return -4   : изображение не сохранилось. возможно слишком большой файл.
 
+    if (list_of_strings_of_gerber.isEmpty()){
+        qDebug()<<"Gerber-файл " << name_of_gerber_file << " не может быть обработан, т.к. контейнер строк файла пуст!";
+        finished();
+        return -1;
+    }
     //
     //  Проверка единственного вхождения команд FS и МО, иначе gerber ошибочный.
     //
     int count_of_FS=0, count_of_MO=0;
     double k_mm_or_inch = 1;  //  коэффициент. если единицы - миллиметры, то это количество миллиметров в дюйме
+
 
     for (int i=0;i<list_of_strings_of_gerber.size();i++) {
         if (list_of_strings_of_gerber.at(i).contains("%FS")){
@@ -190,8 +198,8 @@ int Processor::process(){
     int int_mirr;                                   //  режим отзеркаливания из списка enum mirroring
     QString str;                                    //  текущая строка из файла
     QString str_command = "";                       //  строка с командой
-    QList<Aperture*> aperture_dictionary;           //  словарь апертур. сожержит указатели на апертуры
-    QList<am_template*> am_template_dictionary;     //  словарь макро шаблонов
+    QMap<int,Aperture*> aperture_dictionary;        //  словарь апертур. сожержит указатели на апертуры
+    QMap<QString,am_template*> am_template_dictionary;     //  словарь макро шаблонов
     current_d_code = 1;
     while (i<list_of_strings_of_gerber.size()) {
 
@@ -246,6 +254,7 @@ int Processor::process(){
                     //   AD
                     //----------
                         QString d_code_number_of_aperture = "";
+                        int int_d_code_of_aperture = 0;
                         QString name_of_aperture_template = "";
                         QString type_of_aperture_template = "";     //  тип апертуры
                         QString modifiers = "";                     //  имеющиеся модификаторы в строке с командой (разделяются запятой)
@@ -269,6 +278,7 @@ int Processor::process(){
                                 break;
                             }
                         }
+                        int_d_code_of_aperture = d_code_number_of_aperture.toInt();
                         //
                         //  считывание модификаторов в строку
                         //
@@ -291,12 +301,13 @@ int Processor::process(){
                             //
                             //  поиск в словаре макро-шаблонов шаблона с данным именем. если найден - указатель в buffpointer
                             //
-                            for (int i=0; i<am_template_dictionary.size(); i++) {
-                                if (name_of_aperture_template == am_template_dictionary.at(i)->get_name()){
-                                    am_pointer = am_template_dictionary.at(i);                                    
-                                    break;
-                                }
-                            }
+//                            for (int i=0; i<am_template_dictionary.size(); i++) {
+//                                if (name_of_aperture_template == am_template_dictionary.at(i)->get_name()){
+//                                    am_pointer = am_template_dictionary.at(i);
+//                                    break;
+//                                }
+//                            }
+                            am_pointer = am_template_dictionary.find(name_of_aperture_template).value();
                             if (am_pointer == nullptr){
                                 qDebug()<<"Обнаружен пустой элемент в словаре макро-апертур. Gerber-файл " << name_of_gerber_file << " не может быть обработан!";
                                 finished();
@@ -306,9 +317,9 @@ int Processor::process(){
                         //
                         //  создание апертуры, и добавление ее в словарь aperture_dictionary
                         //
-                        Aperture *new_aperture = new Aperture(d_code_number_of_aperture.toInt(), name_of_aperture_template, type_of_aperture_template, modifiers, am_pointer);
+                        Aperture *new_aperture = new Aperture(int_d_code_of_aperture, name_of_aperture_template, type_of_aperture_template, modifiers, am_pointer);
                         new_aperture->create(dpi);
-                        aperture_dictionary.append(new_aperture);
+                        aperture_dictionary.insert(int_d_code_of_aperture, new_aperture);
                     }break;
                     //----------
                     //   AM
@@ -353,7 +364,7 @@ int Processor::process(){
                         // создание макро шаблона, и добавление его в словарь am_template_dictionary
                         //
                         am_template *new_am_template = new am_template(name_of_am_template,data_blocks);
-                        am_template_dictionary.append(new_am_template);
+                        am_template_dictionary.insert(name_of_am_template, new_am_template);
                     }break;
                     case AB :{
 
@@ -761,12 +772,14 @@ int Processor::process(){
                             number_of_Dnn.append(str.at(i));
                         }
                         //  поиск данной апертуры в словаре апертур по d-коду..и ее установка в качестве текущей
-                        for (int i=0;i<aperture_dictionary.size();i++) {
-                            if (aperture_dictionary.at(i)->get_d_code()==number_of_Dnn.toInt()){
-                                current_aperture = aperture_dictionary.at(i);
-                                break;
-                            }
-                        }
+//                        for (int i=0;i<aperture_dictionary.size();i++) {
+//                            if (aperture_dictionary.at(i)->get_d_code()==number_of_Dnn.toInt()){
+//                                current_aperture = aperture_dictionary.at(i);
+//                                break;
+//                            }
+//                        }
+                        current_aperture = aperture_dictionary.find(number_of_Dnn.toInt()).value();
+
                         //  установка параметров пера, соответствующих данной апертуре (если это круг) для рисования в D01
                         //  если файл является контуром, то толщина апертуры игнорируется во избежание очень тонкого контура на изображении.
                         //**************************************************************
@@ -1237,12 +1250,14 @@ int Processor::process(){
     //
     //  Освобождение динамической памяти от словарей
     //
-    for (int i=0;i<aperture_dictionary.size();i++) {
-        delete aperture_dictionary.at(i);
-    }
-    for (int i=0;i<am_template_dictionary.size();i++) {
-        delete am_template_dictionary.at(i);
-    }
+    aperture_dictionary.clear();
+    am_template_dictionary.clear();
+//    for (int i=0;i<aperture_dictionary.size();i++) {
+//        delete aperture_dictionary.at(i);
+//    }
+//    for (int i=0;i<am_template_dictionary.size();i++) {
+//        delete am_template_dictionary.at(i);
+//    }
 
 //        log_file.close();   //  закрытие файла с логами
         finished();         //  сигнал для главного окна приложения
