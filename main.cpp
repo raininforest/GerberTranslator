@@ -22,6 +22,7 @@ int main(int argc, char *argv[])
     // запуск главного приложения
     QApplication a(argc, argv);
     Main_window w;
+    w.setWindowIcon(QIcon(QDir::currentPath() + "/icon.ico"));
     w.setGeometry(200,200,820,480);
     w.setFixedSize(820,480);
     w.show();
