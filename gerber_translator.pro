@@ -42,7 +42,7 @@ HEADERS += \
 FORMS += \
         main_window.ui
 
-RC_ICONS = Untitled5.ico
+RC_ICONS = config/icon.ico
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
