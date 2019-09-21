@@ -215,7 +215,7 @@ void Aperture::create(const int dpi){
                             new_local_primitive->rotation = calculate_expression(am_mods.at(5), &var_dictionary);
                         }
                         new_local_primitive->path.setFillRule(Qt::WindingFill);
-                    };break;
+                    }break;
                     //Vector Line - концы квадратные.
                     case 20:{
                         //bool exposure = 1;
@@ -224,7 +224,7 @@ void Aperture::create(const int dpi){
 //                        float end_x = 0, end_y = 0;
 //                        float rotation;
 
-                    };break;
+                    }break;
                     //Center Line
                     case 21:{
                         //bool exposure = am_mods.at(1).toInt();
@@ -238,7 +238,7 @@ void Aperture::create(const int dpi){
                         new_local_primitive->path.addRect(rect_primitive);
                         new_local_primitive->rotation = calculate_expression(am_mods.last(), &var_dictionary);                   //  угол поворота в градусах относительно центра апертуры
                         new_local_primitive->path.closeSubpath();
-                    };break;
+                    }break;
                     //Outline
                     case 4:{
                         //bool exposure = 1;
@@ -259,7 +259,7 @@ void Aperture::create(const int dpi){
                         new_local_primitive->path.setFillRule(Qt::WindingFill);
                         new_local_primitive->rotation = calculate_expression(am_mods.last(), &var_dictionary);   //  угол поворота в градусах относительно центра апертуры
 
-                    };break;
+                    }break;
                     //Polygon
 
                     case 5:{
@@ -269,7 +269,7 @@ void Aperture::create(const int dpi){
 //                        float diameter = 0;
                         //float rotation;
 
-                    };break;
+                    }break;
                     //Moire
                     case 6:{
                         //bool exposure = 1;
@@ -282,7 +282,7 @@ void Aperture::create(const int dpi){
 //                        float crosshair_length = 0;//if 0, there is no crosshair
                         //float rotation = 0;
 
-                    };break;
+                    }break;
                     //Thermal
                     case 7:{
                         //bool exposure = 1;
@@ -292,7 +292,7 @@ void Aperture::create(const int dpi){
 //                        float gap_thickness = 0;
                         //float rotation = 0;
 
-                    };break;
+                    }break;
                 }  //end of switch перебор примитивов в макрошаблоне
             } //end of описание примитива
 
@@ -435,15 +435,9 @@ float Aperture::calculate_expression(const QString expression, QList<variable>* 
             //      префиксная функция - унарный минус
             //
             if ((in_str.at(i)=='-')&&((i==0)||(!(in_str.at(i-1).isDigit())))) {
-//                if (!operation_stack.isEmpty()){
-//                    *log << "stack.top:" << operation_stack.top().val << "\n";
-//                }
                 item.val = "un_m";
                 item.priority = 1;
                 operation_stack.push(item);
-//                if (!operation_stack.isEmpty()){
-////                    *log << "stack.top:" << operation_stack.top().val << "\n";
-//                }
             }
             //
             //      открывающая скобка
@@ -519,11 +513,6 @@ float Aperture::calculate_expression(const QString expression, QList<variable>* 
         main_outqlist.append(operation_stack.top());
         operation_stack.pop();    }
 
-    //  вывод выражения, преобразованного из инфиксной нотацию в постфиксную (ОПЗ)
-//    for (int i=0;i<main_outqlist.size();i++) {
-////        *log << " OPZ_item:" << main_outqlist.at(i).val << "; " << main_outqlist.at(i).num_val << "; " << main_outqlist.at(i).symbol_type << "\n";
-//    }
-
     //--------------------------------------------------------------------------------------------
     //--------------------------------------------------------------------------------------------
     // Вычисления
@@ -585,16 +574,13 @@ float Aperture::calculate_expression(const QString expression, QList<variable>* 
             }
         }
     }
-//    if (!symbol_stack.isEmpty()){
-////        *log << " -----------------\nRESULT:   " << symbol_stack.top() << "\n";
-//    }
 
     //  После выполнения цикла вычислений результат должен находиться на вершине  стека...
-    //  Вывод результата...
     if (!symbol_stack.isEmpty()){
         return symbol_stack.top();
     }
     else {
+        qDebug()<<"Не удалось вычислить выражение в одном из макро-шаблонов!";
         return -666;
     }
 }

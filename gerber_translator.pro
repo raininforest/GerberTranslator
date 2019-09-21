@@ -29,13 +29,15 @@ SOURCES += \
         main_window.cpp \
     processor.cpp \
     aperture.cpp \
-    am_template.cpp
+    am_template.cpp \
+    updater.cpp
 
 HEADERS += \
         main_window.h \
     processor.h \
     aperture.h \
-    am_template.h
+    am_template.h \
+    updater.h
 
 FORMS += \
         main_window.ui

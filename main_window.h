@@ -63,14 +63,15 @@ private:
         int widget_index;
     };
 
-    QList<thread_struct> threads;           // список потоков для обработки
-    int count_of_finished_processes = 0;    // счетчик завершившихся потоков
+    QList<thread_struct> threads;       // список потоков для обработки
+    int count_of_finished_processes = 0;// счетчик завершившихся потоков
+    int return_code=-1;
 
     Ui::Main_window *ui;
-    QMessageBox msgBox;
+    QMessageBox msgBox;                 // Окно для сообщений
 
-    bool everything_was_ok;
-    bool at_least_one_done;
+    bool everything_was_ok;             // флаг: все файлы были корректно обработаны
+    bool at_least_one_done;             // флаг: хотя бы один файл был обработан
     QString open_path_ini="d:/";
     QString save_path_ini="d:/";
     QString image_format_ini;

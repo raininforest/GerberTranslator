@@ -10,12 +10,14 @@ class Aperture
 {
 
     am_template* my_am_template;    //  указатель на макрошаблон, определенный в AM
+
     //  Параметры апертуры:
     int d_code = -1;                //  номер апертуры
     QString name_of_template = "";  //  имя шаблона апертуры
     QString type_of_template = "";  //  STANDART_C, R, O, P or MACRO
     QString modifiers = "";         //  строка с параметрами, необходимыми для рисования(размеры и т д).
     QStringList mod_list;           //  строковый массив параметров по отдельности, разделенных "Х"
+
     //  Формат координат:
     int x_int;  //  количество разрядов под целую часть
     int x_dec;  //  количество разрядов под дробную часть
@@ -23,16 +25,18 @@ class Aperture
     int y_dec;  //  количество разрядов под дробную часть
 
     struct primitive_struct{
-        QPainterPath path;          //  изображение примитива
-        float rotation = 0;         //  угол поворота
-        bool std_aperture = 1;      //  флаг стандартной апертуры (если 1 - не нужно брать угол и вращать)
+        QPainterPath path;                  //  изображение примитива
+        float rotation = 0;                 //  угол поворота
+        bool std_aperture = 1;              //  флаг стандартной апертуры (если 1 - не нужно брать угол и вращать)
     };
-    QList <primitive_struct> primitives;   //список примитивов для макрошаблона
+
+    QList <primitive_struct> primitives;    //список примитивов для макрошаблона
 
     struct variable{
         int index=0;    //имя (номер) переменной в гербере
         float value=0;  //значение переменной
     };
+
     //  вычисление выражения в модификаторах описания примитива из макро-шаблона
     float calculate_expression(const QString expression, QList<variable>* dict);
 
