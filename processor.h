@@ -11,21 +11,23 @@ class Processor : public QObject
 {    
     Q_OBJECT
 
-    QString image_format = "png";           //  форматизображения
     bool is_outline_flag;                   //  флаг, который свидетельствует о том, что файл является контуром
-    //  габариты плата+поля, а также смещение в мм
-    double w, h, dx, dy;
-    double board_width;     // с полями
-    double board_height;    // с полями
-    //  параметры гербер файла
+
+    double w, h, dx, dy;                    //  габариты платы, смещение
+    double board_width;                     //  с полями
+    double board_height;                    //  с полями
+    double frame_thickness = 0.05;          //  толщина свободного поля вокруг контура в дюймах
+    int    dpi;                             //  dpi разрешение
+    float  opacity_value=1;                 //  степень прозрачности
+
+    QString image_format = "png";           //  формат изображения
+
     QString name_of_gerber_file;            //  имя входного файла (полный путь)
     QString output_folder_path;             //  путь для сохранения изображения
     QString name_of_output_file;            //  имя файла с изображением (полный путь)
     QString name_of_outline_file="";        //  имя файла с изображением контура (полный путь)
+
     QStringList list_of_strings_of_gerber;  //  массив строк гербер-файла
-    int dpi;                                //  dpi разрешение
-    float opacity_value=1;                  //  степень прозрачности
-    double frame_thickness = 0.05;          //  толщина "рамки" вокруг контура в дюймах
 
 public:
 
@@ -46,11 +48,11 @@ public:
         else return 0;
     }
 
-    int process();     //  главная функция - обработка и формирование изображения по заданным размерам и смещению начала координат.
+    int process();      //  главная функция - обработка и формирование изображения по заданным размерам и смещению начала координат.
 
 signals:
 
-    void finished();
+    void finished();    // признак конца обработки
 
 private:    
 
@@ -107,10 +109,10 @@ private:
     enum unit{MM,IN};
     unit unit;
 
-    //Generation parameters:
+    //  Generation parameters:
     int current_x = 0, current_y = 0;
     Aperture* current_aperture;         //  указатель на апертуру из словаря апертур
-    int current_d_code;               //  текущий d-код для поддержких устаревших конструкции с координатами
+    int current_d_code;                 //  текущий d-код для поддержких устаревших конструкции с координатами
                                         //  без указания d-кода в каждой операции...1 - D01, 2 - D02, 3 - D03
 
     enum interpolation_mode{LINEAR, CLOCKWISE_CIRCULAR, COUNTERCLOCKWISE_CIRCULAR};
@@ -118,7 +120,7 @@ private:
     enum quadrant_mode{SINGLE_QUADRANT, MULTI_QUADRANT};
     quadrant_mode quadrant_mode;
 
-    //Aperture transformation parameters:
+    //  Aperture transformation parameters:
     enum polarity{C,D};
     polarity polarity = D;
     enum mirroring{NO_MIRRORING,X,Y,XY};
@@ -126,9 +128,7 @@ private:
     float rotation = -1;
     float scaling = -1;
 
-    //
-    //  Описание внутренних методов
-    //
+
     int string_to_command(const QString);           //  преобразует строку с командой в тип enum commands
     int string_to_extended_command(const QString);  //  преобразует строку с командой в тип enum enum extended_commands
     int string_to_units(const QString);             //  преобразует строку с единицами (дюймы, миллиметры) в тип enum unit

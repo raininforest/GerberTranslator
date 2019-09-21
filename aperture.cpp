@@ -435,15 +435,9 @@ float Aperture::calculate_expression(const QString expression, QList<variable>* 
             //      префиксная функция - унарный минус
             //
             if ((in_str.at(i)=='-')&&((i==0)||(!(in_str.at(i-1).isDigit())))) {
-//                if (!operation_stack.isEmpty()){
-//                    *log << "stack.top:" << operation_stack.top().val << "\n";
-//                }
                 item.val = "un_m";
                 item.priority = 1;
                 operation_stack.push(item);
-//                if (!operation_stack.isEmpty()){
-////                    *log << "stack.top:" << operation_stack.top().val << "\n";
-//                }
             }
             //
             //      открывающая скобка
@@ -519,11 +513,6 @@ float Aperture::calculate_expression(const QString expression, QList<variable>* 
         main_outqlist.append(operation_stack.top());
         operation_stack.pop();    }
 
-    //  вывод выражения, преобразованного из инфиксной нотацию в постфиксную (ОПЗ)
-//    for (int i=0;i<main_outqlist.size();i++) {
-////        *log << " OPZ_item:" << main_outqlist.at(i).val << "; " << main_outqlist.at(i).num_val << "; " << main_outqlist.at(i).symbol_type << "\n";
-//    }
-
     //--------------------------------------------------------------------------------------------
     //--------------------------------------------------------------------------------------------
     // Вычисления
@@ -585,12 +574,8 @@ float Aperture::calculate_expression(const QString expression, QList<variable>* 
             }
         }
     }
-//    if (!symbol_stack.isEmpty()){
-////        *log << " -----------------\nRESULT:   " << symbol_stack.top() << "\n";
-//    }
 
     //  После выполнения цикла вычислений результат должен находиться на вершине  стека...
-    //  Вывод результата...
     if (!symbol_stack.isEmpty()){
         return symbol_stack.top();
     }
