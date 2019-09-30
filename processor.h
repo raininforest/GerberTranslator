@@ -4,7 +4,6 @@
 #include <QString>
 #include <QStringList>
 #include <QPainter>
-#include <QObject>
 #include "aperture.h"
 
 class Processor : public QObject
@@ -52,7 +51,7 @@ public:
 
 signals:
 
-    void finished();    // признак конца обработки
+    void finished();    //  признак конца обработки
 
 private:    
 

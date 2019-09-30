@@ -25,6 +25,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
+    controller.cpp \
         main.cpp \
         main_window.cpp \
     processor.cpp \
@@ -33,6 +34,7 @@ SOURCES += \
     updater.cpp
 
 HEADERS += \
+    controller.h \
         main_window.h \
     processor.h \
     aperture.h \

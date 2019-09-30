@@ -5,8 +5,6 @@
 #include <QListWidget>
 #include <QMessageBox>
 #include <QDebug>
-#include <QFuture>
-#include <QtConcurrent/QtConcurrent>
 #include <QTime>
 #include <QFileDialog>
 #include <QMessageBox>
@@ -18,6 +16,7 @@
 #include <QProcess>
 
 #include "processor.h"
+#include "controller.h"
 
 namespace Ui {
 class Main_window;
@@ -31,62 +30,69 @@ public:
     explicit Main_window(QWidget *parent = nullptr);
     ~Main_window();
 
+    void set_controller(controller* ptr){
+        if (ptr!=nullptr) {
+            c=ptr;
+        }
+    }
+
 protected:
 
     void dragEnterEvent(QDragEnterEvent* event);
 
     void dropEvent(QDropEvent *event);
 
+    void closeEvent(QCloseEvent *event);
+
+public: signals:
+
+    void run_processing();
+
+    void close_app();
+
 private slots:
 
-    void open_slot();
+    void set_ini_parameters();
 
-    void save_slot();
+    void show_message(QString msg_text);
 
-    void what_save_path();
+    void progress_bar(int val);
+
+    void done_slot(QString msg_text);
 
     void exit_slot();
 
-    void show_about();    
+
+
+    void open_slot();
+
+    void what_save_path();
+
+    void show_about();
 
     void dpi_changed(const QString &arg1);
 
-    void process_finished();
-
     void on_comboBox_dpi_currentTextChanged(const QString &arg1);
+
+    void on_comboBox_format_currentTextChanged(const QString &arg1);
+
+    void quick_translation_changed(bool checked);
+
+    void open_folder_after_changed(bool checked);
+
+    void image_size_changed(bool checked);
+
+    void opacity_mode_changed(bool checked);
+
+    void on_start_button_clicked();
+
+    void on_action_6_triggered();
 
 private:
 
-    struct thread_struct{
-        QFuture<int>* future_handle;    // указатель на поток
-        Processor* processor_handle;    // указатель на объект
-        int widget_index;
-    };
-
-    QList<thread_struct> threads;       // список потоков для обработки
-    int count_of_finished_processes = 0;// счетчик завершившихся потоков
-    int return_code=-1;
-
     Ui::Main_window *ui;
-    QMessageBox msgBox;                 // Окно для сообщений
-
-    bool everything_was_ok;             // флаг: все файлы были корректно обработаны
-    bool at_least_one_done;             // флаг: хотя бы один файл был обработан
-    QString open_path_ini="d:/";
-    QString save_path_ini="d:/";
-    QString image_format_ini;
-    QString dpi_ini;
-    QString quick_translation_ini;
-    QString open_folder_after_processing_ini;
-    QString image_size_ini;
-    QString opacity_mode_ini;
-    QString opacity_value_ini="0.8";
-    QString default_image_width_ini="100";
-    QString default_image_height_ini="100";
-    QString default_dx_ini="0";
-    QString default_dy_ini="0";
-    QString frame_thickness_ini="1";
-
+    controller* c=nullptr;  // указатель на контроллер приложения
+    QMessageBox msgBox;     // Окно для сообщений
 };
 
 #endif // MAIN_WINDOW_H
