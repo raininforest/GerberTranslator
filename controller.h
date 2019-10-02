@@ -7,24 +7,77 @@
 #include <QtConcurrent/QtConcurrent>
 #include <QProcess>
 
-struct ini_params_str{
-    Q_GADGET
+class controller: public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QString open_path_ini
+               READ open_path_ini
+               WRITE set_open_path_ini
+               NOTIFY open_path_ini_Changed)
+    Q_PROPERTY(QString save_path_ini
+               READ save_path_ini
+               WRITE set_save_path_ini
+               NOTIFY save_path_ini_Changed)
+    Q_PROPERTY(QString image_format_ini
+               READ image_format_ini
+               WRITE set_image_format_ini
+               NOTIFY image_format_ini_Changed)
+    Q_PROPERTY(QString dpi_ini
+               READ dpi_ini
+               WRITE set_dpi_ini
+               NOTIFY dpi_ini_Changed)
+    Q_PROPERTY(QString quick_translation_ini
+               READ quick_translation_ini
+               WRITE set_quick_translation_ini
+               NOTIFY quick_translation_ini_Changed)
+    Q_PROPERTY(QString open_folder_after_processing_ini
+               READ open_folder_after_processing_ini
+               WRITE set_open_folder_after_processing_ini
+               NOTIFY open_folder_after_processing_ini_Changed)
+    Q_PROPERTY(QString image_size_ini
+               READ image_size_ini
+               WRITE set_image_size_ini
+               NOTIFY image_size_ini_Changed)
+    Q_PROPERTY(QString opacity_mode_ini
+               READ opacity_mode_ini
+               WRITE set_opacity_mode_ini
+               NOTIFY opacity_mode_ini_Changed)
+    Q_PROPERTY(QString opacity_value_ini
+               READ opacity_value_ini
+               WRITE set_opacity_value_ini
+               NOTIFY opacity_value_ini_Changed)
+    Q_PROPERTY(QString default_image_width_ini
+               READ default_image_width_ini
+               WRITE set_default_image_width_ini
+               NOTIFY default_image_width_ini_Changed)
+    Q_PROPERTY(QString default_image_height_ini
+               READ default_image_height_ini
+               WRITE set_default_image_height_ini
+               NOTIFY default_image_height_ini_Changed)
+    Q_PROPERTY(QString default_dx_ini
+               READ default_dx_ini
+               WRITE set_default_dx_ini
+               NOTIFY default_dx_ini_Changed)
+    Q_PROPERTY(QString default_dy_ini
+               READ default_dy_ini
+               WRITE set_default_dy_ini
+               NOTIFY default_dy_ini_Changed)
+    Q_PROPERTY(QString frame_thickness_ini
+               READ frame_thickness_ini
+               WRITE set_frame_thickness_ini
+               NOTIFY frame_thickness_ini_Changed)
+    Q_PROPERTY(QString gerbers_string
+               READ gerbers_string
+               WRITE set_gerbers_string
+               NOTIFY gerbers_string_Changed)
 
-    Q_PROPERTY(QString open_path_ini MEMBER m_open_path_ini)
-    Q_PROPERTY(QString save_path_ini MEMBER m_save_path_ini)
-    Q_PROPERTY(QString image_format_ini MEMBER m_image_format_ini)
-    Q_PROPERTY(QString dpi_ini MEMBER m_dpi_ini)
-    Q_PROPERTY(QString quick_translation_ini MEMBER m_quick_translation_ini)
-    Q_PROPERTY(QString open_folder_after_processing_ini MEMBER m_open_folder_after_processing_ini)
-    Q_PROPERTY(QString image_size_ini MEMBER m_image_size_ini)
-    Q_PROPERTY(QString opacity_mode_ini MEMBER m_opacity_mode_ini)
-    Q_PROPERTY(QString opacity_value_ini MEMBER m_opacity_value_ini)
-    Q_PROPERTY(QString default_image_width_ini MEMBER m_default_image_width_ini)
-    Q_PROPERTY(QString default_image_height_ini MEMBER m_default_image_height_ini)
-    Q_PROPERTY(QString default_dx_ini MEMBER m_default_dx_ini)
-    Q_PROPERTY(QString default_dy_ini MEMBER m_default_dy_ini)
-    Q_PROPERTY(QString frame_thickness_ini MEMBER m_frame_thickness_ini)
 public:
+    controller();
+
+        //  глобальный список обрабатываемых файлов
+    void load_ini_file();
+    QStringList list_of_gerbers;
+
     QString m_open_path_ini;
     QString m_save_path_ini;
     QString m_image_format_ini;
@@ -39,19 +92,44 @@ public:
     QString m_default_dx_ini;
     QString m_default_dy_ini;
     QString m_frame_thickness_ini;
-};
+    QString m_gerbers_string;
 
-class controller: public QObject
-{
-    Q_OBJECT
 
-public:
-    explicit controller();
+    QString open_path_ini() const {return m_open_path_ini;}
+    QString save_path_ini() const {return m_save_path_ini;}
+    QString image_format_ini() const {return m_image_format_ini;}
+    QString dpi_ini() const {return m_dpi_ini;}
+    QString quick_translation_ini() const {return m_quick_translation_ini;}
+    QString open_folder_after_processing_ini() const {return m_open_folder_after_processing_ini;}
+    QString image_size_ini() const {return m_image_size_ini;}
+    QString opacity_mode_ini() const {return m_opacity_mode_ini;}
+    QString opacity_value_ini() const {return m_opacity_value_ini;}
+    QString default_image_width_ini() const {return m_default_image_width_ini;}
+    QString default_image_height_ini() const {return m_default_image_height_ini;}
+    QString default_dx_ini() const {return m_default_dx_ini;}
+    QString default_dy_ini() const {return m_default_dy_ini;}
+    QString frame_thickness_ini() const {return m_frame_thickness_ini;}
+    QString gerbers_string() const {return m_gerbers_string;}
 
-    ini_params_str ini_params;      //  глобальная структура со всеми параметрами из ини файла
-    QStringList list_of_gerbers;    //  глобальный список обрабатываемых файлов
 
-    void load_ini_file();
+    void set_open_path_ini(const QString str){m_open_path_ini=str;}
+    void set_save_path_ini(const QString str){m_save_path_ini=str;}
+    void set_image_format_ini(const QString str){m_image_format_ini=str;}
+    void set_dpi_ini(const QString str){m_dpi_ini=str;}
+    void set_quick_translation_ini(const QString str){m_quick_translation_ini=str;}
+    void set_open_folder_after_processing_ini(const QString str){m_open_folder_after_processing_ini=str;}
+    void set_image_size_ini(const QString str){m_image_size_ini=str;}
+    void set_opacity_mode_ini(const QString str){m_opacity_mode_ini=str;}
+    void set_opacity_value_ini(const QString str){m_opacity_value_ini=str;}
+    void set_default_image_width_ini(const QString str){m_default_image_width_ini=str;}
+    void set_default_image_height_ini(const QString str){m_default_image_height_ini=str;}
+    void set_default_dx_ini(const QString str){m_default_dx_ini=str;}
+    void set_default_dy_ini(const QString str){m_default_dy_ini=str;}
+    void set_frame_thickness_ini(const QString str){m_frame_thickness_ini=str;}
+    void set_gerbers_string(const QString str){
+        m_gerbers_string=str;
+        emit gerbers_string_Changed();
+    }
 
 private:
 
@@ -71,17 +149,33 @@ private:
 
 signals:
 
+    void open_path_ini_Changed();
+    void save_path_ini_Changed();
+    void image_format_ini_Changed();
+    void dpi_ini_Changed();
+    void quick_translation_ini_Changed();
+    void open_folder_after_processing_ini_Changed();
+    void image_size_ini_Changed();
+    void opacity_mode_ini_Changed();
+    void opacity_value_ini_Changed();
+    void default_image_width_ini_Changed();
+    void default_image_height_ini_Changed();
+    void default_dx_ini_Changed();
+    void default_dy_ini_Changed();
+    void frame_thickness_ini_Changed();
+    void gerbers_string_Changed();
+
     //генерируется после чтения инифайла
     void ready_to_init();
 
     //во время обработки приращение прогресса
-    void increase_progress(int);
+    void increase_progress(QVariant);
 
     //при необходимости показать диалог с сообщением
-    void message(QString);
+    void message(QVariant);
 
     //признак конца текущей обработки всех файлов
-    void processing_done(QString msg_text);
+    void processing_done(QVariant);
 
     //данные сохранены, память освобождена - можно закрывать приложение
     void ready_to_exit();
@@ -96,6 +190,10 @@ private slots:
 
     //при закрытии окна. сначала нужно сохранить настройки в файл.
     void prepare_for_exit();
+
+    void set_list_of_gerbers_from_QML_string(){
+        list_of_gerbers=m_gerbers_string.split('\n');
+    }
 
 };
 

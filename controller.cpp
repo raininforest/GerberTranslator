@@ -2,7 +2,7 @@
 
 controller::controller()
 {
-
+    QObject::connect(this, SIGNAL(gerbers_string_Changed()),this, SLOT(set_list_of_gerbers_from_QML_string()));
 }
 
 void controller::load_ini_file(){
@@ -18,13 +18,13 @@ void controller::load_ini_file(){
 
             if (!str.contains('%')) {
                 if (str.contains("open_path")){
-                    ini_params.m_open_path_ini = str.right(str.size()-(str.indexOf('=')+1));
+                    m_open_path_ini = str.right(str.size()-(str.indexOf('=')+1));
                 }
                 else if (str.contains("save_path")) {
-                    ini_params.m_save_path_ini = str.right(str.size()-(str.indexOf('=')+1));
+                    m_save_path_ini = str.right(str.size()-(str.indexOf('=')+1));
                 }
                 else if (str.contains("image_format")) {
-                    ini_params.m_image_format_ini = str.right(str.size()-(str.indexOf('=')+1));
+                    m_image_format_ini = str.right(str.size()-(str.indexOf('=')+1));
                 }
                 else if (str.contains("dpi")) {
                     QString pre_dpi;
@@ -32,41 +32,41 @@ void controller::load_ini_file(){
                     bool is_dpi_correct = false;
                     pre_dpi.toInt(&is_dpi_correct);
                     if (is_dpi_correct){
-                        ini_params.m_dpi_ini = pre_dpi;
+                        m_dpi_ini = pre_dpi;
                     }
                     else {
                         emit message("Невозможно установить разрешение из файла настроек gerber_translator.ini!\n Будет установлено значение по умолчанию.");
                     }
                 }
                 else if (str.contains("quick_translation")) {
-                    ini_params.m_quick_translation_ini = str.right(str.size()-(str.indexOf('=')+1));                    
+                    m_quick_translation_ini = str.right(str.size()-(str.indexOf('=')+1));
                 }
                 else if (str.contains("open_folder_after_processing")) {
-                    ini_params.m_open_folder_after_processing_ini = str.right(str.size()-(str.indexOf('=')+1));                    
+                    m_open_folder_after_processing_ini = str.right(str.size()-(str.indexOf('=')+1));
                 }
                 else if (str.contains("image_size")) {
-                    ini_params.m_image_size_ini = str.right(str.size()-(str.indexOf('=')+1));                    
+                    m_image_size_ini = str.right(str.size()-(str.indexOf('=')+1));
                 }
                 else if (str.contains("default_image_width")) {
-                    ini_params.m_default_image_width_ini = str.right(str.size()-(str.indexOf('=')+1));
+                    m_default_image_width_ini = str.right(str.size()-(str.indexOf('=')+1));
                 }
                 else if (str.contains("default_image_height")) {
-                    ini_params.m_default_image_height_ini = str.right(str.size()-(str.indexOf('=')+1));
+                    m_default_image_height_ini = str.right(str.size()-(str.indexOf('=')+1));
                 }
                 else if (str.contains("default_dx")) {
-                    ini_params.m_default_dx_ini = str.right(str.size()-(str.indexOf('=')+1));
+                    m_default_dx_ini = str.right(str.size()-(str.indexOf('=')+1));
                 }
                 else if (str.contains("default_dy")) {
-                    ini_params.m_default_dy_ini = str.right(str.size()-(str.indexOf('=')+1));
+                    m_default_dy_ini = str.right(str.size()-(str.indexOf('=')+1));
                 }
                 else if (str.contains("opacity_mode")) {
-                    ini_params.m_opacity_mode_ini = str.right(str.size()-(str.indexOf('=')+1));                    
+                    m_opacity_mode_ini = str.right(str.size()-(str.indexOf('=')+1));
                 }
                 else if (str.contains("opacity_value")) {
-                    ini_params.m_opacity_value_ini = str.right(str.size()-(str.indexOf('=')+1));
+                    m_opacity_value_ini = str.right(str.size()-(str.indexOf('=')+1));
                 }
                 else if (str.contains("frame_thickness")) {
-                    ini_params.m_frame_thickness_ini = str.right(str.size()-(str.indexOf('=')+1));
+                    m_frame_thickness_ini = str.right(str.size()-(str.indexOf('=')+1));
                 }
             }
         }
@@ -78,7 +78,7 @@ void controller::load_ini_file(){
 
 void controller::run_all()
 {
-    if ((QDir(ini_params.m_save_path_ini).exists())&&(!ini_params.m_save_path_ini.isEmpty())){
+    if ((QDir(m_save_path_ini).exists())&&(!m_save_path_ini.isEmpty())){
 
         // Особождение динамической памяти
         for (int i=0; i<threads.size(); i++){
@@ -100,23 +100,23 @@ void controller::run_all()
         everything_was_ok = true;
         at_least_one_done = false;
         QString outline_name;
-        double w = ini_params.m_default_image_width_ini.toDouble(), h = ini_params.m_default_image_height_ini.toDouble(), dx = ini_params.m_default_dx_ini.toDouble(), dy = ini_params.m_default_dy_ini.toDouble();   //размеры платы и смещение начала координат по умолчанию...
+        double w = m_default_image_width_ini.toDouble(), h = m_default_image_height_ini.toDouble(), dx = m_default_dx_ini.toDouble(), dy = m_default_dy_ini.toDouble();   //размеры платы и смещение начала координат по умолчанию...
 
         //  поиск в списке загруженных герберов файла с ".board",
         //  чтобы рассчитать размеры (платы) изображения для всех загруженных герберов по контуру.
         for (int i=0;i<list_of_gerbers.size();i++) {
             if (list_of_gerbers.at(i).contains(".board")){
                 p = new Processor(1);
-                p->set_frame_thickness(ini_params.m_frame_thickness_ini.toDouble());
-                p->set_dpi(ini_params.m_dpi_ini.toInt());     //  утстановка пользовательского разрешения в dpi
-                p->set_image_format(ini_params.m_image_format_ini);
-                p->set_paths(list_of_gerbers.at(i),ini_params.m_save_path_ini);
+                p->set_frame_thickness(m_frame_thickness_ini.toDouble());
+                p->set_dpi(m_dpi_ini.toInt());     //  утстановка пользовательского разрешения в dpi
+                p->set_image_format(m_image_format_ini);
+                p->set_paths(list_of_gerbers.at(i),m_save_path_ini);
                 p->load_file();      //  загрузка файла в память
-                if (ini_params.m_image_size_ini=="by_outline"){
+                if (m_image_size_ini=="by_outline"){
                     p->get_outline_size(&w, &h, &dx, &dy);           //  рассчет ширины и высоты рисунка, а также смещения начала координат (например, оно в центре круглой платы)
                 }
-                if ((ini_params.m_opacity_mode_ini=="on")&&(ini_params.m_image_format_ini=="png")){
-                    p->set_opacity_value(ini_params.m_opacity_value_ini.toFloat());
+                if ((m_opacity_mode_ini=="on")&&(m_image_format_ini=="png")){
+                    p->set_opacity_value(m_opacity_value_ini.toFloat());
                 }
                 outline_name = p->get_outline_filename();
                 p->set_w_h_dx_dy(w,h,dx,dy);
@@ -144,18 +144,18 @@ void controller::run_all()
 
         //  Цикл обработки всех загруженных файлов, кроме файла контура - формирование изображения
         //  Если обработка файла контура прошла успешно
-        if ((at_least_one_done)||(ini_params.m_image_size_ini=="by_ini")){
+        if ((at_least_one_done)||(m_image_size_ini=="by_ini")){
             for (int i=0; i<list_of_gerbers.size(); i++) {
                 if (!(list_of_gerbers.at(i).contains(".board"))){
 
                     p = new Processor(0);
-                    p->set_frame_thickness(ini_params.m_frame_thickness_ini.toDouble());
-                    p->set_dpi(ini_params.m_dpi_ini.toInt());
-                    p->set_image_format(ini_params.m_image_format_ini);
-                    p->set_paths(list_of_gerbers.at(i),ini_params.m_save_path_ini);
+                    p->set_frame_thickness(m_frame_thickness_ini.toDouble());
+                    p->set_dpi(m_dpi_ini.toInt());
+                    p->set_image_format(m_image_format_ini);
+                    p->set_paths(list_of_gerbers.at(i),m_save_path_ini);
                     p->load_file();                                                  //  загрузка файла в память
-                    if ((ini_params.m_opacity_mode_ini=="on")&&(ini_params.m_image_format_ini=="png")){
-                        p->set_opacity_value(ini_params.m_opacity_value_ini.toFloat());
+                    if ((m_opacity_mode_ini=="on")&&(m_image_format_ini=="png")){
+                        p->set_opacity_value(m_opacity_value_ini.toFloat());
                     }
                     p->set_outline_file_name(outline_name); //  установка пути к изображению контура
                     p->set_w_h_dx_dy(w,h,dx,dy);
@@ -177,7 +177,7 @@ void controller::run_all()
     } // end of if
     else {
         //  Выдача сообщения об ошибке
-        emit message("Указанный каталог не существует!");
+        emit processing_done("Указанный каталог не существует!");
     }
 }
 
@@ -226,7 +226,7 @@ void controller::process_finished(){
             emit processing_done("Ошибка! Ни один файл не обработан!");
         }
 
-        if ((ini_params.m_open_folder_after_processing_ini=="on")&&at_least_one_done) {
+        if ((m_open_folder_after_processing_ini=="on")&&at_least_one_done) {
 
             QString local_ver_file_name = "gt_version";
             QString platform;
@@ -248,11 +248,11 @@ void controller::process_finished(){
 
             if (platform=="windows"){
                 QProcess process(this);
-                process.startDetached("explorer " + ini_params.m_save_path_ini.replace(('/'),('\\')));
+                process.startDetached("explorer " + m_save_path_ini.replace(('/'),('\\')));
             }
             else if (platform=="linux") {
                 QProcess process(this);
-                process.startDetached("nautilus " + ini_params.m_save_path_ini);
+                process.startDetached("nautilus " + m_save_path_ini);
             }
         }
         threads.clear();
@@ -276,20 +276,20 @@ void controller::prepare_for_exit(){
         }
         else{
 
-            file.write("open_path="+ini_params.m_open_path_ini.toUtf8()+'\n');
-            file.write("save_path="+ini_params.m_save_path_ini.toUtf8()+'\n');
-            file.write("image_format="+ini_params.m_image_format_ini.toUtf8()+'\n');
-            file.write("dpi="+ini_params.m_dpi_ini.toUtf8()+'\n');
-            file.write("quick_translation="+ini_params.m_quick_translation_ini.toUtf8()+'\n');
-            file.write("open_folder_after_processing="+ini_params.m_open_folder_after_processing_ini.toUtf8()+'\n');
-            file.write("image_size="+ini_params.m_image_size_ini.toUtf8()+'\n');
-            file.write("default_image_width="+ini_params.m_default_image_width_ini.toUtf8()+'\n');
-            file.write("default_image_height="+ini_params.m_default_image_height_ini.toUtf8()+'\n');
-            file.write("default_dx="+ini_params.m_default_dx_ini.toUtf8()+'\n');
-            file.write("default_dy="+ini_params.m_default_dy_ini.toUtf8()+'\n');
-            file.write("opacity_mode="+ini_params.m_opacity_mode_ini.toUtf8()+'\n');
-            file.write("opacity_value="+ini_params.m_opacity_value_ini.toUtf8()+'\n');
-            file.write("frame_thickness="+ini_params.m_frame_thickness_ini.toUtf8()+'\n');
+            file.write("open_path="+m_open_path_ini.toUtf8()+'\n');
+            file.write("save_path="+m_save_path_ini.toUtf8()+'\n');
+            file.write("image_format="+m_image_format_ini.toUtf8()+'\n');
+            file.write("dpi="+m_dpi_ini.toUtf8()+'\n');
+            file.write("quick_translation="+m_quick_translation_ini.toUtf8()+'\n');
+            file.write("open_folder_after_processing="+m_open_folder_after_processing_ini.toUtf8()+'\n');
+            file.write("image_size="+m_image_size_ini.toUtf8()+'\n');
+            file.write("default_image_width="+m_default_image_width_ini.toUtf8()+'\n');
+            file.write("default_image_height="+m_default_image_height_ini.toUtf8()+'\n');
+            file.write("default_dx="+m_default_dx_ini.toUtf8()+'\n');
+            file.write("default_dy="+m_default_dy_ini.toUtf8()+'\n');
+            file.write("opacity_mode="+m_opacity_mode_ini.toUtf8()+'\n');
+            file.write("opacity_value="+m_opacity_value_ini.toUtf8()+'\n');
+            file.write("frame_thickness="+m_frame_thickness_ini.toUtf8()+'\n');
             file.write("\n% Комментарии:\n");
             file.write("% open_path = [путь для открытия файлов по-умолчанию]\n");
             file.write("% save_path = [путь для сохранения файлов по-умолчанию]\n");

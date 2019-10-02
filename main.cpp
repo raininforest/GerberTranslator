@@ -1,8 +1,11 @@
-#include "main_window.h"
+//#include "main_window.h"
 #include "controller.h"
 #include "updater.h"
 #include <QApplication>
+#include <QQmlApplicationEngine>
+#include <QQmlContext>
 #include <QObject>
+#include <QVariant>
 
 int main(int argc, char *argv[])
 {    
@@ -22,22 +25,28 @@ int main(int argc, char *argv[])
     }
 
     QApplication a(argc, argv);
+
+    QQmlApplicationEngine engine;
     controller c;       // создание контроллера
-    Main_window w;      // создание и запуск главного приложения
-    w.set_controller(&c);
-    w.setWindowIcon(QIcon(QDir::currentPath() + "/icon.ico"));
-    w.setGeometry(200,200,820,480);
-    w.setFixedSize(820,480);
+    engine.rootContext()->setContextProperty("controller",&c);
+    const QUrl url(QStringLiteral("qrc:/main.qml"));
+    QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
+                     &a, [url](QObject *obj, const QUrl &objUrl) {
+        if (!obj && url == objUrl)
+            QCoreApplication::exit(-1);
+    }, Qt::QueuedConnection);
+    engine.load(url);
 
-    QObject::connect(&c,SIGNAL(message(QString)),&w,SLOT(show_message(QString)));
-    QObject::connect(&c,SIGNAL(ready_to_init()),&w,SLOT(set_ini_parameters()));
-    QObject::connect(&c,SIGNAL(increase_progress(int)),&w,SLOT(progress_bar(int)));
-    QObject::connect(&c,SIGNAL(processing_done(QString)),&w,SLOT(done_slot(QString)));
-    QObject::connect(&c,SIGNAL(ready_to_exit()),&w,SLOT(exit_slot()));
-    QObject::connect(&w,SIGNAL(run_processing()),&c,SLOT(run_all()));
-    QObject::connect(&w,SIGNAL(close_app()),&c,SLOT(prepare_for_exit()));
+    QObject *mainwindow = engine.rootObjects().at(0); //объект главного окна qml
 
-    w.show();
+    QObject::connect(&c,SIGNAL(message(QVariant)),mainwindow,SLOT(show_message(QVariant)));
+    QObject::connect(&c,SIGNAL(ready_to_init()),mainwindow,SLOT(set_ini_parameters()));
+    QObject::connect(&c,SIGNAL(increase_progress(QVariant)),mainwindow,SLOT(progress_bar(QVariant)));
+    QObject::connect(&c,SIGNAL(processing_done(QVariant)),mainwindow,SLOT(done_slot(QVariant)));
+    QObject::connect(&c,SIGNAL(ready_to_exit()),mainwindow,SLOT(exit_slot()));
+    QObject::connect(mainwindow,SIGNAL(run_processing()),&c,SLOT(run_all()));
+    QObject::connect(mainwindow,SIGNAL(close_app()),&c,SLOT(prepare_for_exit()));
+
     c.load_ini_file();
 
     return a.exec();

@@ -4,12 +4,14 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT += qml
+QT += widgets
+
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = gerber_translator
-TEMPLATE = app
+#TEMPLATE = app
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
@@ -33,6 +35,14 @@ SOURCES += \
     am_template.cpp \
     updater.cpp
 
+RESOURCES += qml.qrc
+
+# Additional import path used to resolve QML modules in Qt Creator's code model
+QML_IMPORT_PATH = controls/
+
+# Additional import path used to resolve QML modules just for Qt Quick Designer
+QML_DESIGNER_IMPORT_PATH =
+
 HEADERS += \
     controller.h \
         main_window.h \
@@ -44,7 +54,7 @@ HEADERS += \
 FORMS += \
         main_window.ui
 
-RC_ICONS = config/icon.ico
+#RC_ICONS = config/icon.ico
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

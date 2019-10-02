@@ -38,7 +38,7 @@ void Main_window::open_slot()
     //
     QFileDialog *OpnDlg = new QFileDialog(nullptr);
     QStringList List_of_files;
-    List_of_files = OpnDlg->getOpenFileNames(this, "Выберите файлы для загрузки", c->ini_params.m_open_path_ini, "");
+    List_of_files = OpnDlg->getOpenFileNames(this, "Выберите файлы для загрузки", cptr->m_open_path_ini, "");
     if (List_of_files.size())  //если список не пуст(когда ничего не выбрал), то..
     {
         int outlines_counter = 0;
@@ -66,9 +66,9 @@ void Main_window::open_slot()
         ui->progressBar->setRange(0,ui->listWidget->count());
         ui->progressBar->setValue(ui->progressBar->minimum());
 
-        c->list_of_gerbers.clear();
-        c->list_of_gerbers=List_of_files;
-        c->ini_params.m_open_path_ini = List_of_files.at(0).left(List_of_files.at(0).lastIndexOf('/'));
+        cptr->list_of_gerbers.clear();
+        cptr->list_of_gerbers=List_of_files;
+        cptr->m_open_path_ini = List_of_files.at(0).left(List_of_files.at(0).lastIndexOf('/'));
 
         //  запуск обработки, если включена опция мгновенной трансляции
         if (ui->action_3->isChecked()) {
@@ -82,10 +82,10 @@ void Main_window::what_save_path(){
 
     QString path_str;
     QFileDialog *SaveDlg = new QFileDialog(nullptr);
-    path_str = SaveDlg->getExistingDirectory(this, "Укажите путь для сохранения изображений", c->ini_params.m_save_path_ini, QFileDialog::ShowDirsOnly);
+    path_str = SaveDlg->getExistingDirectory(this, "Укажите путь для сохранения изображений", cptr->m_save_path_ini, QFileDialog::ShowDirsOnly);
     if (path_str!=""){
         ui->lineEdit->setText(path_str);
-        c->ini_params.m_save_path_ini = path_str;
+        cptr->m_save_path_ini = path_str;
     }
     delete SaveDlg;
     ui->start_button->setEnabled(true);
@@ -107,7 +107,7 @@ void Main_window::dropEvent(QDropEvent *event){
         return;
     }
     ui->listWidget->clear();
-    c->list_of_gerbers.clear();
+    cptr->list_of_gerbers.clear();
 
     QString item_path_text="";
     for (int i=0; i<urls.size(); i++) {
@@ -115,7 +115,7 @@ void Main_window::dropEvent(QDropEvent *event){
         item_path_text.replace("%5B","[");
         item_path_text.replace("%5D","]");
         ui->listWidget->addItem(item_path_text);
-        c->list_of_gerbers.append(item_path_text);
+        cptr->list_of_gerbers.append(item_path_text);
     }
 
     ui->listWidget->setEnabled(true);
@@ -154,7 +154,7 @@ void Main_window::dpi_changed(const QString &arg1)
 
 void Main_window::on_comboBox_format_currentTextChanged(const QString &arg1)
 {
-    c->ini_params.m_image_format_ini=arg1;
+    cptr->m_image_format_ini=arg1;
 }
 
 void Main_window::on_comboBox_dpi_currentTextChanged(const QString &arg1)
@@ -163,7 +163,7 @@ void Main_window::on_comboBox_dpi_currentTextChanged(const QString &arg1)
     arg1.toInt(&is_dpi_correct);
     if (is_dpi_correct){
         ui->comboBox_dpi->setCurrentText(arg1);
-        c->ini_params.m_dpi_ini=arg1;
+        cptr->m_dpi_ini=arg1;
     }
     else {
         msgBox.setWindowTitle("Gerber-транслятор");
@@ -179,37 +179,37 @@ void Main_window::on_comboBox_dpi_currentTextChanged(const QString &arg1)
 
 void Main_window::quick_translation_changed(bool checked){
     if (checked){
-        c->ini_params.m_quick_translation_ini="on";
+        cptr->m_quick_translation_ini="on";
     }
     else {
-        c->ini_params.m_quick_translation_ini="off";
+        cptr->m_quick_translation_ini="off";
     }
 }
 
 void Main_window::open_folder_after_changed(bool checked){
     if (checked){
-        c->ini_params.m_open_folder_after_processing_ini="on";
+        cptr->m_open_folder_after_processing_ini="on";
     }
     else {
-        c->ini_params.m_open_folder_after_processing_ini="off";
+        cptr->m_open_folder_after_processing_ini="off";
     }
 }
 
 void Main_window::image_size_changed(bool checked){
     if (checked){
-        c->ini_params.m_image_size_ini="by_ini";
+        cptr->m_image_size_ini="by_ini";
     }
     else {
-        c->ini_params.m_image_size_ini="by_outline";
+        cptr->m_image_size_ini="by_outline";
     }
 }
 
 void Main_window::opacity_mode_changed(bool checked){
     if (checked){
-        c->ini_params.m_opacity_mode_ini="on";
+        cptr->m_opacity_mode_ini="on";
     }
     else {
-        c->ini_params.m_opacity_mode_ini="off";
+        cptr->m_opacity_mode_ini="off";
     }
 }
 
@@ -251,31 +251,31 @@ void Main_window::done_slot(QString msg_text){
 
 void Main_window::set_ini_parameters(){
 
-    ui->lineEdit->setText(c->ini_params.m_save_path_ini);
-    ui->comboBox_format->setCurrentText(c->ini_params.m_image_format_ini);
-    ui->comboBox_dpi->setCurrentText(c->ini_params.m_dpi_ini);
-    if (c->ini_params.m_quick_translation_ini=="on"){
+    ui->lineEdit->setText(cptr->m_save_path_ini);
+    ui->comboBox_format->setCurrentText(cptr->m_image_format_ini);
+    ui->comboBox_dpi->setCurrentText(cptr->m_dpi_ini);
+    if (cptr->m_quick_translation_ini=="on"){
         ui->action_3->setChecked(true);
     }
-    else if (c->ini_params.m_quick_translation_ini=="off") {
+    else if (cptr->m_quick_translation_ini=="off") {
         ui->action_3->setChecked(false);
     }
-    if (c->ini_params.m_open_folder_after_processing_ini=="on"){
+    if (cptr->m_open_folder_after_processing_ini=="on"){
         ui->action_7->setChecked(true);
     }
-    else if (c->ini_params.m_open_folder_after_processing_ini=="off") {
+    else if (cptr->m_open_folder_after_processing_ini=="off") {
         ui->action_7->setChecked(false);
     }
-    if (c->ini_params.m_image_size_ini=="by_ini"){
+    if (cptr->m_image_size_ini=="by_ini"){
         ui->action_6->setChecked(true);
     }
-    else if (c->ini_params.m_image_size_ini=="by_outline") {
+    else if (cptr->m_image_size_ini=="by_outline") {
         ui->action_6->setChecked(false);
     }
-    if (c->ini_params.m_opacity_mode_ini=="on"){
+    if (cptr->m_opacity_mode_ini=="on"){
         ui->action_5->setChecked(true);
     }
-    else if (c->ini_params.m_opacity_mode_ini=="off") {
+    else if (cptr->m_opacity_mode_ini=="off") {
         ui->action_5->setChecked(false);
     }
 }

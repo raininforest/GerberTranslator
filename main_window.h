@@ -32,7 +32,7 @@ public:
 
     void set_controller(controller* ptr){
         if (ptr!=nullptr) {
-            c=ptr;
+            cptr=ptr;
         }
     }
 
@@ -91,7 +91,7 @@ private slots:
 private:
 
     Ui::Main_window *ui;
-    controller* c=nullptr;  // указатель на контроллер приложения
+    controller* cptr=nullptr;  // указатель на контроллер приложения
     QMessageBox msgBox;     // Окно для сообщений
 };
 

@@ -1,7 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>main.qml</file>
-        <file>componentCreation.js</file>
         <file>controls/GtButton.qml</file>
         <file>controls/GtComboBox.qml</file>
         <file>controls/GtFileDialog.qml</file>
