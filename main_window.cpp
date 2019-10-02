@@ -137,7 +137,7 @@ void Main_window::dropEvent(QDropEvent *event){
 }
 
 void Main_window::closeEvent(QCloseEvent *event){
-    event->ignore();
+    //event->ignore();
     emit close_app();
 }
 
@@ -215,7 +215,8 @@ void Main_window::opacity_mode_changed(bool checked){
 
 void Main_window::exit_slot()
 {
-    this->close();
+
+    qDebug()<<"exit?" << this->close();
 }
 
 void Main_window::progress_bar(int val){

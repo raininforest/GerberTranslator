@@ -169,13 +169,13 @@ signals:
     void ready_to_init();
 
     //во время обработки приращение прогресса
-    void increase_progress(QVariant);
+    void increase_progress(int);
 
     //при необходимости показать диалог с сообщением
-    void message(QVariant);
+    void message(QString);
 
     //признак конца текущей обработки всех файлов
-    void processing_done(QVariant);
+    void processing_done(QString);
 
     //данные сохранены, память освобождена - можно закрывать приложение
     void ready_to_exit();
