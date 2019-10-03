@@ -5,5 +5,8 @@
         <file>controls/GtComboBox.qml</file>
         <file>controls/GtFileDialog.qml</file>
         <file>controls/GtFolderDialog.qml</file>
+        <file>controls/GtModalWindow.qml</file>
+        <file>controls/GtCheckBox.qml</file>
+        <file>controls/GtMessageWindow.qml</file>
     </qresource>
 </RCC>

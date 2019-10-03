@@ -18,8 +18,8 @@ Window {
     signal close_app()
 
     function show_message(msg){
-        msg_dialog.text=msg
-        msg_dialog.open()
+        msg_dialog.msg_text=msg
+        msg_dialog.visible=true
     }
     function set_ini_parameters(){
         open_dialog.folder="file://"+controller.open_path_ini
@@ -27,6 +27,30 @@ Window {
         save_path.text=controller.save_path_ini
         dpi_combo.currentIndex=dpi_combo.find(controller.dpi_ini)
         format_combo.currentIndex=format_combo.find(controller.image_format_ini)
+        if (controller.open_folder_after_processing_ini=="on"){
+            settings_window.open_folder_chckbox_checked=true
+        }
+        else {
+            settings_window.open_folder_chckbox_checked=false
+        }
+        if (controller.opacity_mode_ini=="on"){
+            settings_window.transparent_img_chckbox_checked=true
+        }
+        else {
+            settings_window.transparent_img_chckbox_checked=false
+        }
+        if (controller.quick_translation_ini=="on"){
+            settings_window.quick_translation_chckbox_checked=true
+        }
+        else {
+            settings_window.quick_translation_chckbox_checked=false
+        }
+        if (controller.image_size_ini=="by_ini"){
+            settings_window.board_size_chckbox_checked=true
+        }
+        else {
+            settings_window.board_size_chckbox_checked=false
+        }
     }
     function progress_bar(val){
         if (count_of_files!=0){
@@ -35,12 +59,13 @@ Window {
     }
     function done_slot(msg){
         open_button.enabled=true
+        settings_button.enabled=true
         exit_button.enabled=true
         bot_row_layout.enabled=true
         progress.value=1
         progress_text.text="Done!"
-        msg_dialog.text=msg
-        msg_dialog.open()
+        msg_dialog.msg_text=msg
+        msg_dialog.visible=true
     }
     function exit_slot(){
         window.close()
@@ -74,10 +99,14 @@ Window {
         running: false        
     }
 
-    MessageDialog{
+    GtMessageWindow{
         id: msg_dialog
         title: "Gerber-translator"
+        visible: false
+        x: (window.width-width)/2+window.x
+        y: (window.height-height)/2+window.y
     }
+
 
     MouseArea{
         anchors.fill: parent
@@ -108,6 +137,9 @@ Window {
             bot_row_layout.enabled=true
             progress.value=0
             progress_text.text=""
+            if (settings_window.quick_translation_chckbox_checked){
+                run_processing()
+            }
         }
     }
     GtFolderDialog{
@@ -175,6 +207,26 @@ Window {
                         color: back_color
                     }
                 }
+            }
+            GtButton{
+                id: settings_button
+                text: qsTr("Settings")
+                down_color: main_color
+                up_color: back_color
+                border_color: main_color
+                onClicked: {
+
+                    settings_window.visible=true
+
+                }
+            }
+            GtButton{
+                id: help_button
+                text: qsTr("?")
+                w: 50
+                down_color: main_color
+                up_color: back_color
+                border_color: main_color
             }
             GtButton{
                 id: exit_button
@@ -278,12 +330,57 @@ Window {
                     progress.value=0
                     progress_text.text=""
                     open_button.enabled=false
+                    settings_button.enabled=false
                     exit_button.enabled=false
                     bot_row_layout.enabled=false
                     window.run_processing()
-
                 }
             }
         }
+    }//end of ColumnLayout
+
+
+
+    GtModalWindow{
+        id: settings_window
+        x: (window.width-width)/2+window.x
+        y: (window.height-height)/2+window.y
+        color: back_color
+        opacity: 0.9
+        visible: false
+
+        onQuick_translation_chckbox_checkedChanged: {
+            if(quick_translation_chckbox_checked){
+                controller.quick_translation_ini="on"
+            }
+            else{
+                controller.quick_translation_ini="off"
+            }
+        }
+        onOpen_folder_chckbox_checkedChanged: {
+            if(open_folder_chckbox_checked){
+                controller.open_folder_after_processing_ini="on"
+            }
+            else{
+                controller.open_folder_after_processing_ini="off"
+            }
+        }
+        onBoard_size_chckbox_checkedChanged: {
+            if(board_size_chckbox_checked){
+                controller.image_size_ini="by_ini"
+            }
+            else{
+                controller.image_size_ini="by_outline"
+            }
+        }
+        onTransparent_img_chckbox_checkedChanged: {
+            if(transparent_img_chckbox_checked){
+                controller.opacity_mode_ini="on"
+            }
+            else{
+                controller.opacity_mode_ini="off"
+            }
+        }
+
     }
 }
