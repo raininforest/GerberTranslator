@@ -37,9 +37,7 @@ Window {
         open_button.enabled=true
         exit_button.enabled=true
         bot_row_layout.enabled=true
-
         progress.value=1
-
         msg_dialog.text=msg
         msg_dialog.open()
     }

@@ -70,10 +70,9 @@ void controller::load_ini_file(){
                 }
             }
         }
-        file.close();
-
-        emit ready_to_init();
+        file.close();        
     }
+    emit ready_to_init();
 }
 
 void controller::run_all()

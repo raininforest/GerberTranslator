@@ -78,20 +78,20 @@ public:
     void load_ini_file();
     QStringList list_of_gerbers;
 
-    QString m_open_path_ini;
-    QString m_save_path_ini;
-    QString m_image_format_ini;
-    QString m_dpi_ini;
-    QString m_quick_translation_ini;
-    QString m_open_folder_after_processing_ini;
-    QString m_image_size_ini;
-    QString m_opacity_mode_ini;
-    QString m_opacity_value_ini;
-    QString m_default_image_width_ini;
-    QString m_default_image_height_ini;
-    QString m_default_dx_ini;
-    QString m_default_dy_ini;
-    QString m_frame_thickness_ini;
+    QString m_open_path_ini="";
+    QString m_save_path_ini="";
+    QString m_image_format_ini="png";
+    QString m_dpi_ini="300";
+    QString m_quick_translation_ini="off";
+    QString m_open_folder_after_processing_ini="on";
+    QString m_image_size_ini="by_outline";
+    QString m_opacity_mode_ini="off";
+    QString m_opacity_value_ini="0.8";
+    QString m_default_image_width_ini="100";
+    QString m_default_image_height_ini="100";
+    QString m_default_dx_ini="0";
+    QString m_default_dy_ini="0";
+    QString m_frame_thickness_ini="1";
     QString m_gerbers_string;
 
 
