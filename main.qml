@@ -38,6 +38,7 @@ Window {
         exit_button.enabled=true
         bot_row_layout.enabled=true
         progress.value=1
+        progress_text.text="Done!"
         msg_dialog.text=msg
         msg_dialog.open()
     }
@@ -106,6 +107,7 @@ Window {
             bottom_controls_anim.running=true
             bot_row_layout.enabled=true
             progress.value=0
+            progress_text.text=""
         }
     }
     GtFolderDialog{
@@ -165,6 +167,12 @@ Window {
                         height: parent.height
                         radius: main_radius
                         color: main_color
+                    }
+                    Text {
+                        id: progress_text
+                        text: ""
+                        anchors.centerIn: parent
+                        color: back_color
                     }
                 }
             }
@@ -268,6 +276,7 @@ Window {
 
                 onClicked: {
                     progress.value=0
+                    progress_text.text=""
                     open_button.enabled=false
                     exit_button.enabled=false
                     bot_row_layout.enabled=false
