@@ -132,6 +132,7 @@ void controller::run_all()
                 return_code = future->result();
                 if ((return_code)>-1){
                     at_least_one_done = true;
+                    emit file_done(i);
                 }
                 else {
                     everything_was_ok = false;
@@ -195,6 +196,7 @@ void controller::process_finished(){
 
     if ((return_code)>-1){
         at_least_one_done = true;
+        emit file_done(threads.at(i).widget_index);
     }
     else {
         everything_was_ok = false;

@@ -239,7 +239,6 @@ void Main_window::done_slot(QString msg_text){
     ui->progressBar->setValue(ui->progressBar->maximum());
     ui->progressBar->setEnabled(false);
 
-
     msgBox.setWindowTitle("Gerber-транслятор");
     msgBox.setText(msg_text);
     msgBox.exec();
@@ -287,5 +286,13 @@ void Main_window::on_start_button_clicked()
     ui->lineEdit->setEnabled(false);
     ui->label->setEnabled(false);
     ui->progressBar->setEnabled(true);
+
+    for (int i=0;i<ui->listWidget->count();i++) {
+        ui->listWidget->item(i)->setForeground(Qt::black);
+    }
     emit run_processing();
+}
+
+void Main_window::change_item_color(int widget_index){
+    ui->listWidget->item(widget_index)->setForeground(Qt::green);
 }

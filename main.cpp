@@ -33,6 +33,7 @@ int main(int argc, char *argv[])
     QObject::connect(&c,SIGNAL(ready_to_init()),&w,SLOT(set_ini_parameters()));
     QObject::connect(&c,SIGNAL(increase_progress(int)),&w,SLOT(progress_bar(int)));
     QObject::connect(&c,SIGNAL(processing_done(QString)),&w,SLOT(done_slot(QString)));
+    QObject::connect(&c, SIGNAL(file_done(int)), &w, SLOT(change_item_color(int)));
     QObject::connect(&w,SIGNAL(run_processing()),&c,SLOT(run_all()));
     QObject::connect(&w,SIGNAL(close_app()),&c,SLOT(prepare_for_exit()));
 

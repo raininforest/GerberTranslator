@@ -58,6 +58,8 @@ private slots:
 
     void progress_bar(int val);
 
+    void change_item_color(int widget_index);
+
     void done_slot(QString msg_text);
 
     void open_slot();
