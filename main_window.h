@@ -60,10 +60,6 @@ private slots:
 
     void done_slot(QString msg_text);
 
-    void exit_slot();
-
-
-
     void open_slot();
 
     void what_save_path();
@@ -85,8 +81,6 @@ private slots:
     void opacity_mode_changed(bool checked);
 
     void on_start_button_clicked();
-
-    void on_action_6_triggered();
 
 private:
 

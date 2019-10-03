@@ -2,10 +2,7 @@
 #include "controller.h"
 #include "updater.h"
 #include <QApplication>
-//#include <QQmlApplicationEngine>
-//#include <QQmlContext>
 #include <QObject>
-#include <QVariant>
 
 int main(int argc, char *argv[])
 {    
@@ -36,7 +33,6 @@ int main(int argc, char *argv[])
     QObject::connect(&c,SIGNAL(ready_to_init()),&w,SLOT(set_ini_parameters()));
     QObject::connect(&c,SIGNAL(increase_progress(int)),&w,SLOT(progress_bar(int)));
     QObject::connect(&c,SIGNAL(processing_done(QString)),&w,SLOT(done_slot(QString)));
-    QObject::connect(&c,SIGNAL(ready_to_exit()),&w,SLOT(exit_slot()));
     QObject::connect(&w,SIGNAL(run_processing()),&c,SLOT(run_all()));
     QObject::connect(&w,SIGNAL(close_app()),&c,SLOT(prepare_for_exit()));
 

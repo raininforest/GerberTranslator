@@ -11,7 +11,7 @@ Main_window::Main_window(QWidget *parent) :
     QObject::connect(ui->actionOpen,SIGNAL(triggered()),SLOT(open_slot()));
     QObject::connect(ui->save_button,SIGNAL(clicked()),SLOT(what_save_path()));
     QObject::connect(ui->actionSave,SIGNAL(triggered()),SLOT(what_save_path()));
-    QObject::connect(ui->actionExit,SIGNAL(triggered()),SIGNAL(close_app()));
+    QObject::connect(ui->actionExit,SIGNAL(triggered()),SLOT(close()));
     QObject::connect(ui->action_3,SIGNAL(triggered(bool)),SLOT(quick_translation_changed(bool)));
     QObject::connect(ui->action_7,SIGNAL(triggered(bool)),SLOT(open_folder_after_changed(bool)));
     QObject::connect(ui->action_6,SIGNAL(triggered(bool)),SLOT(image_size_changed(bool)));
@@ -27,7 +27,7 @@ Main_window::~Main_window()
 
 void Main_window::show_about(){
 
-    QMessageBox::about(this, "О программе", "Gerber-транслятор.\n\nВерсия: 1.10.\nДата релиза: 01.10.2019\nАвтор: Велеско С.А.");
+    QMessageBox::about(this, "О программе", "Gerber-транслятор.\n\nВерсия: 1.10.\nДата релиза: 03.10.2019.\nАвтор: Велеско С.А.");
 
 }
 
@@ -137,8 +137,9 @@ void Main_window::dropEvent(QDropEvent *event){
 }
 
 void Main_window::closeEvent(QCloseEvent *event){
-    //event->ignore();
+
     emit close_app();
+    event->accept();
 }
 
 void Main_window::dpi_changed(const QString &arg1)
@@ -213,12 +214,6 @@ void Main_window::opacity_mode_changed(bool checked){
     }
 }
 
-void Main_window::exit_slot()
-{
-
-    qDebug()<<"exit?" << this->close();
-}
-
 void Main_window::progress_bar(int val){
     ui->progressBar->setValue(ui->progressBar->value()+val);
 }
@@ -281,8 +276,6 @@ void Main_window::set_ini_parameters(){
     }
 }
 
-
-
 void Main_window::on_start_button_clicked()
 {
     ui->menuBar->setEnabled(false);
@@ -295,10 +288,4 @@ void Main_window::on_start_button_clicked()
     ui->label->setEnabled(false);
     ui->progressBar->setEnabled(true);
     emit run_processing();
-}
-
-
-void Main_window::on_action_6_triggered()
-{
-
 }

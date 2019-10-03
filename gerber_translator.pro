@@ -3,15 +3,12 @@
 # Project created by QtCreator 2019-02-24T18:11:59
 #
 #-------------------------------------------------
-
-QT += qml
-QT += widgets
-
+QT += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = gerber_translator
-#TEMPLATE = app
+TEMPLATE = app
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
@@ -34,14 +31,6 @@ SOURCES += \
     aperture.cpp \
     am_template.cpp \
     updater.cpp
-
-RESOURCES += qml.qrc
-
-# Additional import path used to resolve QML modules in Qt Creator's code model
-QML_IMPORT_PATH = controls/
-
-# Additional import path used to resolve QML modules just for Qt Quick Designer
-QML_DESIGNER_IMPORT_PATH =
 
 HEADERS += \
     controller.h \

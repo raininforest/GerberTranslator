@@ -376,6 +376,12 @@
    <property name="shortcut">
     <string>Ctrl+Q</string>
    </property>
+   <property name="autoRepeat">
+    <bool>true</bool>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::TextHeuristicRole</enum>
+   </property>
   </action>
   <action name="action">
    <property name="text">

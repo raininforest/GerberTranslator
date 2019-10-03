@@ -2,7 +2,7 @@
 
 controller::controller()
 {
-    QObject::connect(this, SIGNAL(gerbers_string_Changed()),this, SLOT(set_list_of_gerbers_from_QML_string()));
+
 }
 
 void controller::load_ini_file(){
@@ -71,9 +71,8 @@ void controller::load_ini_file(){
             }
         }
         file.close();
-
-        emit ready_to_init();
     }
+    emit ready_to_init();
 }
 
 void controller::run_all()
@@ -307,6 +306,7 @@ void controller::prepare_for_exit(){
             file.write("% frame_thickness = [толщина полей вокруг изображения в мм]");
 
             file.close();
+            qDebug()<<"ini was saved. ready to exit.";
             emit ready_to_exit();
         }
 }
