@@ -17,7 +17,7 @@ Window {
     signal run_processing()
     signal close_app()
 
-    function show_message(msg){        
+    function show_message(msg){
         if(msg_dialog.visible==true){
             msg_dialog.msg_text+="\n\n"+msg
         }
@@ -25,6 +25,8 @@ Window {
             msg_dialog.msg_text=msg
             msg_dialog.visible=true
         }
+        msg_dialog.x=(window.width-msg_dialog.width)/2+window.x
+        msg_dialog.y=(window.height-msg_dialog.height)/2+window.y
     }
     function set_ini_parameters(){
         open_dialog.folder="file://"+controller.open_path_ini
@@ -108,8 +110,8 @@ Window {
         id: msg_dialog
         title: "Gerber-translator"
         visible: false
-        x: (window.width-width)/2+window.x
-        y: (window.height-height)/2+window.y
+//        x: (window.width-width)/2+window.x
+//        y: (window.height-height)/2+window.y
     }
 
 
