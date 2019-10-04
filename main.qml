@@ -17,9 +17,14 @@ Window {
     signal run_processing()
     signal close_app()
 
-    function show_message(msg){
-        msg_dialog.msg_text=msg
-        msg_dialog.visible=true
+    function show_message(msg){        
+        if(msg_dialog.visible==true){
+            msg_dialog.msg_text+="\n\n"+msg
+        }
+        else{
+            msg_dialog.msg_text=msg
+            msg_dialog.visible=true
+        }
     }
     function set_ini_parameters(){
         open_dialog.folder="file://"+controller.open_path_ini
@@ -65,8 +70,7 @@ Window {
         bot_row_layout.enabled=true
         progress.value=1
         progress_text.text="Done!"
-        msg_dialog.msg_text=msg
-        msg_dialog.visible=true
+        show_message(msg)
     }
     function exit_slot(){
         window.close()
