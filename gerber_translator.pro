@@ -29,7 +29,6 @@ CONFIG += c++11
 SOURCES += \
     controller.cpp \
         main.cpp \
-        main_window.cpp \
     processor.cpp \
     aperture.cpp \
     am_template.cpp \
@@ -45,7 +44,6 @@ QML_DESIGNER_IMPORT_PATH =
 
 HEADERS += \
     controller.h \
-        main_window.h \
     processor.h \
     aperture.h \
     am_template.h \
