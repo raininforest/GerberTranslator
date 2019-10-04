@@ -49,8 +49,7 @@ HEADERS += \
     am_template.h \
     updater.h
 
-FORMS += \
-        main_window.ui
+FORMS +=
 
 #RC_ICONS = config/icon.ico
 
