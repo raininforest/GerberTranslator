@@ -34,6 +34,7 @@ Window{
         id: msg_column
         spacing: 0
 
+
         Text {
             id: msg_string
             text: msg_text
@@ -41,6 +42,7 @@ Window{
             horizontalAlignment: Text.AlignHCenter
             Layout.alignment: Qt.AlignTop | Qt.AlignHCenter
             Layout.margins: 15
+            Layout.maximumWidth: 500
             //width: parent.width-20
             wrapMode: TextEdit.Wrap
             clip: true
