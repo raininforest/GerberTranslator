@@ -60,6 +60,7 @@ Window {
     function done_slot(msg){
         open_button.enabled=true
         settings_button.enabled=true
+        help_button.enabled=true
         exit_button.enabled=true
         bot_row_layout.enabled=true
         progress.value=1
@@ -227,6 +228,7 @@ Window {
                 down_color: main_color
                 up_color: back_color
                 border_color: main_color
+                onClicked: show_message("Gerber translator.\n\nVersion: 1.10.\nRelease date: 01.10.2019\nAuthor: Velesko S.A.")
             }
             GtButton{
                 id: exit_button
@@ -333,6 +335,7 @@ Window {
                     settings_button.enabled=false
                     exit_button.enabled=false
                     bot_row_layout.enabled=false
+                    help_button.enabled=false
                     window.run_processing()
                 }
             }
