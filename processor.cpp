@@ -91,8 +91,7 @@ int Processor::load_file(){
 
     QFile file(name_of_gerber_file);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)){
-        qDebug()<<"Gerber-файл " << name_of_gerber_file << " не может быть открыт! Возможно он не существует.";
-        //сообщение об ошибке чтения файла
+        qDebug()<<"Error! Gerber file " << name_of_gerber_file << " can not be opened!";
         return -1;
     }
     while(!file.atEnd()) {
@@ -106,22 +105,20 @@ int Processor::load_file(){
 
 int Processor::process(){
 
-//  return 1    : успешное достижение конца файла
-//  return -1   : ошибка открытия лог файла
-//  return -2   : критическая ошибка в гербер файле, file is invalid
-//  return -3   : painter не запустился. возможно слишком большой файл. поможет версия 64 бит
-//  return -4   : изображение не сохранилось. возможно слишком большой файл.
+//  return 1    : succesfully processed
+//  return -3   : painter is not running. very big image. try 64bit and more memory
+//  return -4   : image was not saved
 
     if (list_of_strings_of_gerber.isEmpty()){
-        qDebug()<<"Gerber-файл " << name_of_gerber_file << " не может быть обработан, т.к. контейнер строк файла пуст!";
+        qDebug()<<"Gerber file " << name_of_gerber_file << " can not be processed, because list of strings is empty.";
         finished();
         return -1;
     }
     //
-    //  Проверка единственного вхождения команд FS и МО, иначе gerber ошибочный.
+    //  Checking the only occurrence of the FS and MO commands, otherwise gerber is invalid.
     //
     int count_of_FS=0, count_of_MO=0;
-    double k_mm_or_inch = 1;  //  коэффициент. если единицы - миллиметры, то это количество миллиметров в дюйме
+    double k_mm_or_inch = 1;  //  1 if inch, 25.4 if mm
 
 
     for (int i=0;i<list_of_strings_of_gerber.size();i++) {
@@ -136,100 +133,99 @@ int Processor::process(){
         }
     }
     if (!((count_of_FS==1)&&(count_of_MO==1))){
-        qDebug()<<"Gerber-файл " << name_of_gerber_file << " не содержит команды %FS или %MO (либо содержит больше одной) и не может быть обработан!";
+        qDebug()<<"Gerber file " << name_of_gerber_file << " doesn't contain commands %FS or %MO (either contains more than one)! So it is invalid!";
         finished();
         return -2;  //  file is invalid!
     }
 
     //
-    //  Начальные установки для рисования
+    //  Settings for painting..
     //
 
-    //  Размеры холста (размер платы + рамка)    
-    frame_thickness = frame_thickness*k_mm_or_inch;     //  толщина полей вокруг контура платы в дюймах.
-    board_width = w + frame_thickness*2;                //  ширина платы + рамка в дюймах
-    board_height = h + frame_thickness*2;               //  высота платы + рамка в дюймах
+    //  image size (board size + frame)
+    frame_thickness = frame_thickness*k_mm_or_inch;
+    board_width = w + frame_thickness*2;
+    board_height = h + frame_thickness*2;
 
-    //  Создание QImage с размерами, соотв. разрешению и размерам платы, единицам (мм или дюймы)
     QImage pxmp(qRound(board_width*dpi/k_mm_or_inch), qRound(board_height*dpi/k_mm_or_inch), QImage::Format_RGB16);
 
-    //  Если существует изображение контура платы, то рисуем на нем.., иначе создаем чистый pixmap
+    //  if outline image exist, draw on it.., else create clean pixmap
     if (name_of_outline_file!=""){
         if (pxmp.load(name_of_outline_file)){
-            // контур успешно загружен
+            // outline is loaded succesfully
         }
         else {
-            // ошибка загрузки контура
+            // error
             pxmp.fill(Qt::white);
         }
     }
     else {
         pxmp.fill(Qt::white);
         if (is_outline_flag == false) {
-            // это не контур
+            // it is not outline
         }
     }
 
-    //  Установки для инструмента рисования
+    // painter settings:
     QPainter painter;
     painter.begin(&pxmp);
     if (!painter.isActive()){
-        // Ошибка
-        qDebug()<<"QPainter не запущен. Gerber-файл " << name_of_gerber_file << " не может быть обработан!";
+        // Error
+        qDebug()<<"QPainter is not started. Gerber file " << name_of_gerber_file << " can not be processed!";
         finished();
         return -3;
     }
-    painter.setOpacity(qreal(opacity_value));    // прозрачность пера
+    painter.setOpacity(qreal(opacity_value));
     painter.translate((frame_thickness-dx)*dpi/k_mm_or_inch,((board_height+dy-frame_thickness)*dpi/k_mm_or_inch));    //  Отражение Оси Y, чтобы начало координат было в нижнем левом углу и необходимое смещение
 
-    QPen global_pen(Qt::black, 5, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);  //  создание глобального пера с настройками поумолчанию
+    QPen global_pen(Qt::black, 5, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
     painter.setPen(global_pen);
     painter.scale((1/k_mm_or_inch),(-1/k_mm_or_inch));
 
     //
     //
-    //  Основной цикл - обработка всех строк
+    //  Main cycle - all strings processing
     //
     //
 
-    int i=0;                                        //  счетчик строк
-    int command=0;                                  //  команда из списка enum commands
-    int int_unit;                                   //  единицы из списка enum units
-    int int_mirr;                                   //  режим отзеркаливания из списка enum mirroring
-    QString str;                                    //  текущая строка из файла
-    QString str_command = "";                       //  строка с командой
-    QMap<int,Aperture*> aperture_dictionary;        //  словарь апертур. сожержит указатели на апертуры
-    QMap<QString,am_template*> am_template_dictionary;     //  словарь макро шаблонов
+    int i=0;                                        //  string counter
+    int command=0;                                  //  for enum commands
+    int int_unit;                                   //  for enum units
+    int int_mirr;                                   //  for enum mirroring
+    QString str;                                    //  current string
+    QString str_command = "";                       //  command string
+    QMap<int,Aperture*> aperture_dictionary;        //  Aperture dictionary
+    QMap<QString,am_template*> am_template_dictionary;     //  Macro template dictionary
     current_d_code = 1;
     while (i<list_of_strings_of_gerber.size()) {
 
-        str = list_of_strings_of_gerber.at(i);      //  читаю строку из файла
+        str = list_of_strings_of_gerber.at(i);      //  read string..
         if (str.contains("G04")){
-            //  G04 коментарий. ничего не делаю.
+            //  G04 comment. Nothing to do.
         }
         //
-        // Проверка, является ли команда - extended command, начинающаяся с %
+        // extended command? begins from '%'?
         //
         else {
             if (str.contains("%")){
-                str_command = str.mid(1,2);                             //  выделяю двухсимвольную расширенную команду FS.., MO.., AD..итд
+                str_command = str.mid(1,2);                             //  2 chars for commands FS.., MO.., AD..etc
                 command = string_to_extended_command(str_command);      //
                 //
-                //  реализация команд расширенного гербера %...:
+                //  extended gerber commands:
                 //
                 switch (command) {
                     case FS :{
                     //----------
                     //   FS
                     //----------                        
-                        frmt_x_int = 3;                         //  количество целых разрядов ВСЕГДА 3, чтобы избежать несоответствия указанного формата с фактическими координатными данными
-                        frmt_x_dec = str.mid(7,1).toInt();      //  количество разрядов после запятой
-                        frmt_y_int = 3;                         //  количество целых разрядов ВСЕГДА 3, чтобы избежать несоответствия указанного формата с фактическими координатными данными
-                        frmt_y_dec = str.mid(10,1).toInt();     //  количество разрядов после запятой
+                        frmt_x_int = 3;                         //  number of integer digits is ALWAYS 3 (many eCADs generate wrong format)
+                        frmt_x_dec = str.mid(7,1).toInt();      //  decimals
+                        frmt_y_int = 3;                         //  number of integer digits is ALWAYS 3
+                        frmt_y_dec = str.mid(10,1).toInt();     //  decimals
 
-                        //  проверка на выход за пределы допустимых значений количества разрядов...
+                        //  checking command format..
                         if ((frmt_x_int>7)||(frmt_x_dec>6)||(frmt_y_int>7)||(frmt_y_dec>6)||((str.mid(12,1)!="%"))){
-                            qDebug()<<"Неверный формат команды FS. Gerber-файл " << name_of_gerber_file << " не может быть обработан!";
+                            qDebug()<<"Wrong FS command format. Gerber file " << name_of_gerber_file << " is invalid!";
                             finished();
                             return -2;
                         }
@@ -244,7 +240,7 @@ int Processor::process(){
                             case MM : unit = MM; break;
                             case IN : unit = IN; break;
                             default :
-                            qDebug()<<"Неверные единицы измерения в команде MO. Gerber-файл " << name_of_gerber_file << " не может быть обработан!";
+                            qDebug()<<"Invalid units in MO command. Gerber file " << name_of_gerber_file << " is invalid!";
                             finished();
                             return -2;
                         }
@@ -256,20 +252,20 @@ int Processor::process(){
                         QString d_code_number_of_aperture = "";
                         int int_d_code_of_aperture = 0;
                         QString name_of_aperture_template = "";
-                        QString type_of_aperture_template = "";     //  тип апертуры
-                        QString modifiers = "";                     //  имеющиеся модификаторы в строке с командой (разделяются запятой)
-                        int aprt_temp_index = -1;                   //  индекс первого символа имени апертуры в строке с командой
-                        am_template* am_pointer = nullptr;          //  буфер для указателя на текущий макро-шаблон. по-умолчанию макро-шаблона нет.
+                        QString type_of_aperture_template = "";
+                        QString modifiers = "";
+                        int aprt_temp_index = -1;                   //  index of the first character of the aperture name in the command string
+                        am_template* am_pointer = nullptr;          //  aperture template pointer. null by default
 
                         //
-                        //  считывание номера(имени) апертуры, нахождение индекса начала имени апертуры
+                        //  reading the aperture number (name), finding the index of the beginning of the aperture name
                         //
                         for (int i=4;i<str.size();i++) {
                             if (str.at(i).isDigit()){
                                 d_code_number_of_aperture.append(str.at(i));
                             }
                             else if (d_code_number_of_aperture.isEmpty()){
-                                qDebug()<< "Пустой d-code в команде AD. Gerber-файл " << name_of_gerber_file << " не может быть обработан!";
+                                qDebug()<< "Empty d-code in AD command. Gerber file " << name_of_gerber_file << " is invalid!";
                                 finished();
                                 return -2;
                             }
@@ -280,7 +276,7 @@ int Processor::process(){
                         }
                         int_d_code_of_aperture = d_code_number_of_aperture.toInt();
                         //
-                        //  считывание модификаторов в строку
+                        //  reading modifiers
                         //
                         if (str.contains(',')){
                             for (int i=str.indexOf(',')+1;(str.at(i)!='*')&&(str.at(i)!=',');i++) {
@@ -288,7 +284,7 @@ int Processor::process(){
                             }
                         }
                         //
-                        //  считывание имени шаблона апертуры, и определение его типа(в виде строки: стандартный шаблон C, R, O, P или макро шаблон)
+                        //  reading macro template name, and determining its type (as a string: standard template C, R, O, P or macro template)
                         //
                         for (int i=aprt_temp_index;(str.at(i)!='*')&&(str.at(i)!=',');i++) {
                             name_of_aperture_template.append(str.at(i));
@@ -299,23 +295,17 @@ int Processor::process(){
                         else{
                             type_of_aperture_template = "MACRO";
                             //
-                            //  поиск в словаре макро-шаблонов шаблона с данным именем. если найден - указатель в buffpointer
+                            //  finding in macro template dictionary
                             //
-//                            for (int i=0; i<am_template_dictionary.size(); i++) {
-//                                if (name_of_aperture_template == am_template_dictionary.at(i)->get_name()){
-//                                    am_pointer = am_template_dictionary.at(i);
-//                                    break;
-//                                }
-//                            }
                             am_pointer = am_template_dictionary.find(name_of_aperture_template).value();
                             if (am_pointer == nullptr){
-                                qDebug()<<"Обнаружен пустой элемент в словаре макро-апертур. Gerber-файл " << name_of_gerber_file << " не может быть обработан!";
+                                qDebug()<<"An empty element was detected in the macro aperture dictionary. Gerber file " << name_of_gerber_file << " is invalid!";
                                 finished();
                                 return -2;
                             }
                         }
                         //
-                        //  создание апертуры, и добавление ее в словарь aperture_dictionary
+                        //  aperture creation and adding it to aperture_dictionary
                         //
                         Aperture *new_aperture = new Aperture(int_d_code_of_aperture, name_of_aperture_template, type_of_aperture_template, modifiers, am_pointer);
                         new_aperture->create(dpi);
@@ -328,21 +318,21 @@ int Processor::process(){
                         QString name_of_am_template = "";
                         QStringList data_blocks;
                         //
-                        //  считывание имени макро шаблона
+                        //  reading macro template name
                         //
                         for (int j=3;(str.at(j)!='*');j++) {
                             name_of_am_template.append(str.at(j));
                         }
                         if (name_of_am_template.isEmpty()){
-                            qDebug()<<"Не удалось прочитать имя макро-шаблона в команде AM. Gerber-файл " << name_of_gerber_file << " не может быть обработан!";
+                            qDebug()<<"Can not read macro template name in AM command. Gerber file " << name_of_gerber_file << " is invalid!";
                             finished();
                             return -2;
                         }
                         //
-                        //  считывание data-блоков
+                        //  reading data blocks
                         //
 
-                        //  запуск цикла от %AM до %
+                        //  cycle from %AM to %
                         int percent_counter=0;
                         while (percent_counter<2) {
                             str = list_of_strings_of_gerber.at(i);
@@ -351,7 +341,8 @@ int Processor::process(){
                             if (percent_counter == 1)
                                 i++;
                         }
-                        //  проверка на пустые либо ненужные строки и их удаление из листа (например подстрока с именем макрошаблона или знак конца определения шаблона '%')
+                        // check for empty or unnecessary strings and remove them from the list
+                        //(for example, a substring with the name of the macro template or the end sign of the template definition '%')
                         for (int j=0; j<data_blocks.size();) {
                             if (!((data_blocks.at(j).at(0).isDigit())||(data_blocks.at(j).at(0)=='$'))){
                                 data_blocks.removeAt(j);
@@ -361,7 +352,7 @@ int Processor::process(){
                             }
                         }
                         //
-                        // создание макро шаблона, и добавление его в словарь am_template_dictionary
+                        // macro template creation and adding it to am_template_dictionary
                         //
                         am_template *new_am_template = new am_template(name_of_am_template,data_blocks);
                         am_template_dictionary.insert(name_of_am_template, new_am_template);
@@ -369,7 +360,7 @@ int Processor::process(){
                     case AB :{
 
 
-                    //реализация AB
+                    // AB
 
 
 
@@ -387,7 +378,7 @@ int Processor::process(){
                             painter.setBrush(Qt::black);
                         }
                         else {
-                            qDebug()<<"Неверный формат команды LP. Gerber-файл " << name_of_gerber_file << " не может быть обработан!";
+                            qDebug()<<"Wrong LP command format. Gerber file " << name_of_gerber_file << " is invalid!";
                             finished();
                             return -2;
                         }
@@ -407,7 +398,7 @@ int Processor::process(){
                     case LR :{
 
 
-                    //реализация LR
+                    //LR
 
 
 
@@ -415,7 +406,7 @@ int Processor::process(){
                     case LS :{
 
 
-                    //реализация LS
+                    //LS
 
 
 
@@ -423,7 +414,7 @@ int Processor::process(){
                     case TF :{
 
 
-                    //не влияет на изображение
+                    //TF
 
 
 
@@ -431,7 +422,7 @@ int Processor::process(){
                     case TO :{
 
 
-                    //реализация TO
+                    //TO
 
 
 
@@ -439,7 +430,7 @@ int Processor::process(){
                     case TD :{
 
 
-                    //реализация TD
+                    //TD
 
 
 
@@ -448,13 +439,12 @@ int Processor::process(){
             }//end of if (str.contains("%"))
 
             //
-            // Поиск D-кодов
+            // D-codes
             //
 
             else if (str.contains("D")||str.contains("X")||str.contains("Y")) {
-//                current_d_code = 1;
                 if (str.contains("D")){
-                str_command = str.mid(str.indexOf('D'),3);  //  выделяю команду D..(01, 02, 03, nn)
+                str_command = str.mid(str.indexOf('D'),3);  //  D..(01, 02, 03, nn)
                 command = string_to_command(str_command);
                 }
                 else {
@@ -463,9 +453,8 @@ int Processor::process(){
 //                        qDebug()<< str.contains("D") << "command:" <<command;
 //                        qDebug()<< "number of string:0" << i;
                     }
-
-//                    command = current_d_code;               //  deprecated mentor...
-//                    command = D01;
+//                      command = current_d_code;  //  deprecated mentor...
+//                      command = D01;
                 }
                 check_for_G_in_D(str,&interpolation_mode);          //  deprecated mentor...
 
@@ -476,10 +465,10 @@ int Processor::process(){
                     //----------
 //                        current_d_code = 1;                                 //  deprecated mentor...
 //                        check_for_G_in_D(str,&interpolation_mode);          //  deprecated mentor...
-                        int command_x = current_x, command_y = current_y;   //  новые координаты. по умолчанию принимают значение текущих координат
-                        int command_i = 0, command_j = 0;                   //  смещение (центр дуги)
+                        int command_x = current_x, command_y = current_y;   //  coordinate data from d command
+                        int command_i = 0, command_j = 0;                   //  offset
 
-                        //  чтение новых координат из строки с командой
+                        //  reading coordinate data from command string
                         if (str.contains('X')){
                             QString x_val;
                             bool minus=0;
@@ -521,77 +510,76 @@ int Processor::process(){
                             command_j = trim_D_argument(j_val, frmt_y_int, frmt_y_dec, minus);
                         }
                         //
-                        // Рисование в режиме LINEAR (рисование прямых)
+                        // drawing in LINEAR mode
                         //
                         if (interpolation_mode == LINEAR){
                             painter.drawLine(current_x, current_y, command_x, command_y);
                         }
                         //
-                        // Рисование в режиме CLOCKWISE_CIRCULAR
+                        // drawing in CLOCKWISE_CIRCULAR mode
                         //
                         else if (interpolation_mode == CLOCKWISE_CIRCULAR){
-                            // радиус дуги
+                            // arc radius
                             int R = radius_from_big_I_J(command_i,command_j);
-                            // координаты центра дуги:
+                            // center:
                             int Cx = 0;
                             int Cy = 0;
-                            // начальный и конечный угол дуги:
+                            // start angle and end angle of arc:
                             int start_angle = 0;
                             int end_angle = 0;
                             int span_angle = 0;
 
                             if (quadrant_mode == SINGLE_QUADRANT){
-                                // расчет начального угла, конечного угла, центра дуги:
-                                //1 кв.
+                                // 1 q.
                                 if ((current_x < command_x)&&(current_y > command_y)){
                                     Cx = current_x - command_i;
                                     Cy = current_y - command_j;
                                     start_angle = qRound(atan2(command_j,command_i)*16*180/pi);
                                     end_angle = qRound(atan2(command_y-Cy, command_x-Cx)*16*180/pi);
                                 }
-                                //4 кв.
+                                //4 q.
                                 else if ((current_x > command_x)&&(current_y > command_y)){
                                     Cx = current_x - command_i;
                                     Cy = current_y + command_j;
                                     start_angle = qRound(-atan2(command_j,command_i)*16*180/pi);
                                     end_angle = qRound(-atan2(Cy-command_y, command_x-Cx)*16*180/pi);
                                 }
-                                //3 кв.
+                                //3 q.
                                 else if ((current_x > command_x)&&(current_y < command_y)){
                                     Cx = current_x + command_i;
                                     Cy = current_y + command_j;
                                     start_angle = 180*16 + qRound(atan2(command_j,command_i)*16*180/pi);
                                     end_angle = 180*16 + qRound(atan2(Cy-command_y, Cx-command_x)*16*180/pi);
                                 }
-                                //2 кв.
+                                //2 q.
                                 else {
                                     Cx = current_x + command_i;
                                     Cy = current_y - command_j;
                                     start_angle = 180*16 - qRound(atan2(command_j,command_i)*16*180/pi);
                                     end_angle = 180*16 - qRound(atan2(command_y-Cy, Cx-command_x)*16*180/pi);
                                 }
-                                // прямоугольник (для Qt-дуги), в который вписана дуга:
+                                // rect for Qt arc:
                                 QRect arc_rect(Cx-R, Cy-R, R*2, R*2);
-                                // угол дуги:
+                                // span angle:
                                 span_angle = end_angle - start_angle;
-                                // проверка на выход значения угла дуги из диапазона 0..90градусов:
+                                //
                                 if (qAbs(span_angle)>90*16){
                                     if (span_angle<0) span_angle = -90*16;
                                     else {span_angle = 90*16;}
                                 }
-                                // отрисовка дуги:
+                                // drawing arc:
                                 painter.drawArc(arc_rect, -start_angle, -span_angle);
                             }
                             else if (quadrant_mode == MULTI_QUADRANT){
-                                // координаты центра дуги:
+                                // center:
                                 int Cx = current_x + command_i;
                                 int Cy = current_y + command_j;
-                                // прямоугольник, в который вписана дуга:
+                                // rect for arc:
                                 QRect arc_rect(Cx-R, Cy-R, R*2, R*2);
-                                // углы дуги:
+                                // angles:
                                 start_angle = qRound(atan2(-command_j,-command_i)*16*180/pi);
                                 end_angle = qRound(atan2(command_y-Cy, command_x-Cx)*16*180/pi);
-                                // приведение углов к виду 0...360
+                                // convert angle to the range 0...360
                                 norm_angle(&start_angle);
                                 norm_angle(&end_angle);
                                 if (start_angle<=end_angle){
@@ -600,79 +588,78 @@ int Processor::process(){
                                 else {
                                     span_angle = end_angle - start_angle;
                                 }
-                                //  отрисовка дуги:
+                                //  drawing arc:
                                 painter.drawArc(arc_rect, -start_angle, abs(span_angle));
                             }
                             else {
-                                //  Ошибка, режим квадранта не задан!
-                                qDebug()<<"Ошибка! Quadrant mode не задан. Gerber-файл " << name_of_gerber_file << " не может быть обработан!";
+                                //  Error!
+                                qDebug()<<"Error! Quadrant mode is not set. Gerber file " << name_of_gerber_file << " is invalid!";
                                 finished();
                                 return -1;
                             }
                         }
                         //---------------------------------------------------------------
-                        // Рисование в режиме COUNTERCLOCKWISE_CIRCULAR
+                        // drawing in COUNTERCLOCKWISE_CIRCULAR mode
                         //---------------------------------------------------------------
                         else if (interpolation_mode==COUNTERCLOCKWISE_CIRCULAR){
-                            // радиус дуги
+                            // arc radius
                             int R = radius_from_big_I_J(command_i,command_j);
-                            // координаты центра дуги:
+                            // arc center:
                             int Cx = 0;
                             int Cy = 0;
-                            // углы для построения дуги:
+                            // angles:
                             int start_angle = 0;
                             int end_angle = 0;
                             int span_angle = 0;
 
                             if (quadrant_mode == SINGLE_QUADRANT){
-                                // расчет начального угла, конечного угла, центра дуги:
-                                //  1 кв.
+                                //  1 q.
                                 if ((current_x > command_x)&&(current_y < command_y)){
                                     Cx = current_x - command_i;
                                     Cy = current_y - command_j;
                                     start_angle = qRound(atan2(command_j,command_i)*16*180/pi);
                                     end_angle = qRound(atan2(command_y-Cy, command_x-Cx)*16*180/pi);
                                 }
-                                //  4 кв.
+                                //  4 q.
                                 else if ((current_x < command_x)&&(current_y < command_y)){
                                     Cx = current_x - command_i;
                                     Cy = current_y + command_j;
                                     start_angle = qRound(-atan2(command_j,command_i)*16*180/pi);
                                     end_angle = qRound(-atan2(Cy-command_y, command_x-Cx)*16*180/pi);
                                 }
-                                //  3 кв.
+                                //  3 q.
                                 else if ((current_x < command_x)&&(current_y > command_y)){
                                     Cx = current_x + command_i;
                                     Cy = current_y + command_j;
                                     start_angle = 180*16 + qRound(atan2(command_j,command_i)*16*180/pi);
                                     end_angle = 180*16 + qRound(atan2(Cy-command_y, Cx-command_x)*16*180/pi);
                                 }
-                                //  2кв.
+                                //  2 q.
                                 else {
                                     Cx = current_x + command_i;
                                     Cy = current_y - command_j;
                                     start_angle = 180*16 - qRound(atan2(command_j,command_i)*16*180/pi);
                                     end_angle = 180*16 - qRound(atan2(command_y-Cy, Cx-command_x)*16*180/pi);
                                 }
-                                // прямоугольник, в который вписана дуга:
+                                // arc rect:
                                 QRect arc_rect(Cx-R, Cy-R, R*2, R*2);
-                                // угол дуги:
+                                // span angle:
                                 span_angle = end_angle - start_angle;
-                                // проверка на выход значения угла дуги из диапазона 0..90градусов:
+                                //
                                 if (qAbs(span_angle)>90*16){
                                     if (span_angle<0) span_angle = -90*16;
                                     else {span_angle = 90*16;}
                                 }
-                                // отрисовка дуги:
+                                // drawing arc:
                                 painter.drawArc(arc_rect, -start_angle, -span_angle);
                             }
                             else if (quadrant_mode == MULTI_QUADRANT){
-                                // координаты центра дуги:
+                                // arc center:
                                 int Cx = current_x + command_i;
                                 int Cy = current_y + command_j;
-                                // прямоугольник, в который вписана дуга:
+                                // arc rect:
                                 QRect arc_rect(Cx-R, Cy-R, R*2, R*2);
-                                // углы дуги:
+                                // angles:
                                 start_angle = qRound(atan2(-command_j,-command_i)*16*180/pi);
                                 end_angle = qRound(atan2(command_y-Cy, command_x-Cx)*16*180/pi);
                                 norm_angle(&start_angle);
@@ -683,28 +670,26 @@ int Processor::process(){
                                 else {
                                     span_angle = end_angle - start_angle;
                                 }
-                                //  отрисовка дуги:
+                                //  drawing arc:
                                 painter.drawArc(arc_rect, -start_angle, -abs(span_angle));
                             }
                             else {
-                                //  Ошибка, режим квадранта не задан!
-                                qDebug()<<"Ошибка! Quadrant mode не задан. Gerber-файл " << name_of_gerber_file << " не может быть обработан!";
+                                //  Error!
+                                qDebug()<<"Error! Quadrant mode is not set. Gerber file " << name_of_gerber_file << " is invalid!";
                                 finished();
                                 return -1;
                             }
                         }
                         else {
-                            //  Ошибка, режим интерполяции не задан!
-                            qDebug()<<"Ошибка! Interpolation mode не задан. Gerber-файл " << name_of_gerber_file << " не может быть обработан!";
+                            //  Error!
+                            qDebug()<<"Error! Interpolation mode is not set. Gerber file " << name_of_gerber_file << " is invalid!";
                             finished();
                             return -1;
                         }
 
-
-                        //  обновление текущей точки координат
+                        //  updating current coordinates
                         current_x = command_x;
                         current_y = command_y;
-
 
                     }break;
                     case D02 :{
@@ -758,7 +743,7 @@ int Processor::process(){
                             }
                             current_y = trim_D_argument(y_val, frmt_y_int, frmt_y_dec, minus);
                         }                        
-
+                        //FLASH current aperture
                         current_aperture->draw_me(current_x,current_y,&painter);
 
                     }break;
@@ -766,22 +751,15 @@ int Processor::process(){
                     //----------
                     //   Dnnn
                     //----------
-                        //  Чтение числа после D..
+                        //  reading integer after 'D'..
                         QString number_of_Dnn;
                         for (int i=str.indexOf('D')+1;str.at(i).isDigit();i++) {
                             number_of_Dnn.append(str.at(i));
                         }
-                        //  поиск данной апертуры в словаре апертур по d-коду..и ее установка в качестве текущей
-//                        for (int i=0;i<aperture_dictionary.size();i++) {
-//                            if (aperture_dictionary.at(i)->get_d_code()==number_of_Dnn.toInt()){
-//                                current_aperture = aperture_dictionary.at(i);
-//                                break;
-//                            }
-//                        }
+                        //  finding this aperture in aperture dictionary and setting it as current aperture
                         current_aperture = aperture_dictionary.find(number_of_Dnn.toInt()).value();
 
-                        //  установка параметров пера, соответствующих данной апертуре (если это круг) для рисования в D01
-                        //  если файл является контуром, то толщина апертуры игнорируется во избежание очень тонкого контура на изображении.
+                        //  settings of pen for drawing by D01
                         //**************************************************************
                             global_pen.setWidth(current_aperture->get_std_circ_dia_in_px(dpi));
                             painter.setPen(global_pen);
@@ -790,10 +768,10 @@ int Processor::process(){
                 }//end of switch
             }//end of else if (str.contains("D"))
             //---------------------------------------------------------------
-            // Проверка G и М команд
+            // G and М commands
             //---------------------------------------------------------------
             else if (str.contains("G")||str.contains("M")) {
-                str_command = str.mid(0,3);                 // выделяю односимвольную команду D.., G.., M..итд
+                str_command = str.mid(0,3);
                 command = string_to_command(str_command);
                 switch (command) {
                     case G01 :{
@@ -831,27 +809,27 @@ int Processor::process(){
                         //
                         //
                         //
-                        // Р Е Г И О Н Ы
+                        // R E G I O N S
                         //
                         //
                         //
 
-                        bool end_of_region = false;         // признак конца описания региона. нужен для выхода из цикла обработки региона.
-                        bool end_of_contour = false;        // признак конца обрабокти текущего контура внутри региона
-                        bool creating_contour_now = false;  // флаг - идет создание контура, или нет..
-                        QList <QPainterPath*> contours;     // массив указателей на контуры внутри данного региона.
-                        QPointF startpoint;                 // переменная для начальной точки контуров (глобальные текущие координаты, перед каждым контуром)
+                        bool end_of_region = false;
+                        bool end_of_contour = false;
+                        bool creating_contour_now = false;
+                        QList <QPainterPath*> contours;     // contours in current region
+                        QPointF startpoint;
 
-                        //  главный цикл обработки региона
+                        //  main region cycle
                         painter.save();
                         painter.setPen(Qt::NoPen);
                         while (!end_of_region) {
-                            //  перебор контуров
+
                             creating_contour_now = false;
                             end_of_contour = false;
 
                             while (!end_of_contour) {
-                                //  если в данный момент контур не создается и есть команда D01, то запускаю создание нового контура..
+                                //  if at the moment the contour is not created and there is the D01 command, then I start the creation of a new contour ..
                                 str = list_of_strings_of_gerber.at(i);
                                 if ((str.contains("D01"))&&(creating_contour_now == false)){
                                     startpoint.setX(current_x);
@@ -866,7 +844,7 @@ int Processor::process(){
 
                                 if (str.contains("D")||str.contains("X")||str.contains("Y")){
                                     if (str.contains("D")){
-                                    str_command = str.mid(str.indexOf('D'),3);  //  выделяю команду D..(01, 02, 03, nn)
+                                    str_command = str.mid(str.indexOf('D'),3);
                                     command = string_to_command(str_command);
                                     }
                                     else {
@@ -879,8 +857,8 @@ int Processor::process(){
                                         case D01:{
 //                                        current_d_code = 1;                               //  deprecated mentor...
                                         check_for_G_in_D(str,&interpolation_mode);          //  deprecated mentor...
-                                        int command_x = current_x, command_y = current_y;   //  новые координаты. по умолчанию принимают значение текущих координат
-                                        int command_i = 0, command_j = 0;                   //  смещение (центр дуги)
+                                        int command_x = current_x, command_y = current_y;
+                                        int command_i = 0, command_j = 0;
 
                                         //  чтение новых координат из строки с командой
                                         if (str.contains('X')){
@@ -924,77 +902,66 @@ int Processor::process(){
                                             command_j = trim_D_argument(j_val, frmt_y_int, frmt_y_dec, minus);
                                         }
                                         //
-                                        //  Рисование в режиме LINEAR (рисование прямых)
+                                        //  Drawing in LINEAR mode
                                         //
                                         if (interpolation_mode == LINEAR){
                                             contours.last()->lineTo(command_x,command_y);
                                         }
                                         //
-                                        //  Рисование в режиме CLOCKWISE_CIRCULAR
+                                        //  drawing in CLOCKWISE_CIRCULAR mode
                                         //
                                         else if (interpolation_mode == CLOCKWISE_CIRCULAR){
-                                            int R = radius_from_big_I_J(command_i,command_j);   //  радиус дуги
-
-                                            //  координаты центра дуги:
+                                            int R = radius_from_big_I_J(command_i,command_j);   //  arc radius
                                             int Cx = 0;
                                             int Cy = 0;
-                                            //  начальный и конечный угол дуги:
                                             int start_angle = 0;
                                             int end_angle = 0;
                                             int span_angle = 0;
 
                                             if (quadrant_mode == SINGLE_QUADRANT){
-                                                //  расчет начального угла, конечного угла, центра дуги:
-                                                //  1 кв.
+                                                //  1 q.
                                                 if ((current_x < command_x)&&(current_y > command_y)){
                                                     Cx = current_x - command_i;
                                                     Cy = current_y - command_j;
                                                     start_angle = qRound(atan2(command_j,command_i)*16*180/pi);
                                                     end_angle = qRound(atan2(command_y-Cy, command_x-Cx)*16*180/pi);
                                                 }
-                                                //  4 кв.
+                                                //  4 q.
                                                 else if ((current_x > command_x)&&(current_y > command_y)){
                                                     Cx = current_x - command_i;
                                                     Cy = current_y + command_j;
                                                     start_angle = qRound(-atan2(command_j,command_i)*16*180/pi);
                                                     end_angle = qRound(-atan2(Cy-command_y, command_x-Cx)*16*180/pi);
                                                 }
-                                                //  3 кв.
+                                                //  3 q.
                                                 else if ((current_x > command_x)&&(current_y < command_y)){
                                                     Cx = current_x + command_i;
                                                     Cy = current_y + command_j;
                                                     start_angle = 180*16 + qRound(atan2(command_j,command_i)*16*180/pi);
                                                     end_angle = 180*16 + qRound(atan2(Cy-command_y, Cx-command_x)*16*180/pi);
                                                 }
-                                                //  2 кв.
+                                                //  2 q.
                                                 else {
                                                     Cx = current_x + command_i;
                                                     Cy = current_y - command_j;
                                                     start_angle = 180*16 - qRound(atan2(command_j,command_i)*16*180/pi);
                                                     end_angle = 180*16 - qRound(atan2(command_y-Cy, Cx-command_x)*16*180/pi);
                                                 }
-                                                //  прямоугольник (для Qt-дуги), в который вписана дуга:
                                                 QRect arc_rect(Cx-R, Cy-R, R*2, R*2);
-                                                //  угол дуги:
                                                 span_angle = end_angle - start_angle;
-                                                //  проверка на выход значения угла дуги из диапазона 0..90градусов:
                                                 if (qAbs(span_angle)>90*16){
                                                     if (span_angle<0) span_angle = -90*16;
                                                     else {span_angle = 90*16;}
                                                 }
-                                                //  отрисовка дуги:
+                                                //  drawing arc:
                                                 contours.last()->arcTo(arc_rect,-start_angle/16, -span_angle/16);
                                             }
                                             else if (quadrant_mode == MULTI_QUADRANT){
-                                                //  координаты центра дуги:
                                                 int Cx = current_x + command_i;
                                                 int Cy = current_y + command_j;
-                                                //  прямоугольник, в который вписана дуга:
                                                 QRect arc_rect(Cx-R, Cy-R, R*2, R*2);
-                                                //  углы дуги:
                                                 start_angle = qRound(atan2(-command_j,-command_i)*16*180/pi);
                                                 end_angle = qRound(atan2(command_y-Cy, command_x-Cx)*16*180/pi);
-                                                //  приведение углов к виду 0...360
                                                 norm_angle(&start_angle);
                                                 norm_angle(&end_angle);
                                                 if (start_angle<=end_angle){
@@ -1003,82 +970,70 @@ int Processor::process(){
                                                 else {
                                                     span_angle = end_angle - start_angle;
                                                 }
-                                                //  отрисовка дуги:
+                                                //  drawing arc:
 
                                                 contours.last()->arcTo(arc_rect,-start_angle/16, abs(span_angle/16));
                                             }
                                             else {
-                                                //  Ошибка, режим квадранта не задан!
-                                                qDebug()<<"Ошибка! Quadrant mode в регионе не задан. Gerber-файл " << name_of_gerber_file << " не может быть обработан!";
+                                                //  Error!
+                                                qDebug()<<"Error! Quadrant mode is not set (in region). Gerber file " << name_of_gerber_file << " is invalid!";
                                                 finished();
                                                 return -1;
                                             }
                                         }
                                         //
-                                        //  Рисование в режиме COUNTERCLOCKWISE_CIRCULAR
+                                        //  drawing in COUNTERCLOCKWISE_CIRCULAR mode
                                         //
                                         else if (interpolation_mode==COUNTERCLOCKWISE_CIRCULAR){
-                                            // радиус дуги
                                             int R = radius_from_big_I_J(command_i,command_j);
-
-                                            // координаты центра дуги:
                                             int Cx = 0;
                                             int Cy = 0;
-                                            // углы для построения дуги:
                                             int start_angle = 0;
                                             int end_angle = 0;
                                             int span_angle = 0;
 
                                             if (quadrant_mode == SINGLE_QUADRANT){
-                                                //  расчет начального угла, конечного угла, центра дуги:
-                                                //  1 кв.
+                                                //  1 q.
                                                 if ((current_x > command_x)&&(current_y < command_y)){
                                                     Cx = current_x - command_i;
                                                     Cy = current_y - command_j;
                                                     start_angle = qRound(atan2(command_j,command_i)*16*180/pi);
                                                     end_angle = qRound(atan2(command_y-Cy, command_x-Cx)*16*180/pi);
                                                 }
-                                                //  4 кв.
+                                                //  4 q.
                                                 else if ((current_x < command_x)&&(current_y < command_y)){
                                                     Cx = current_x - command_i;
                                                     Cy = current_y + command_j;
                                                     start_angle = qRound(-atan2(command_j,command_i)*16*180/pi);
                                                     end_angle = qRound(-atan2(Cy-command_y, command_x-Cx)*16*180/pi);
                                                 }
-                                                //  3 кв.
+                                                //  3 q.
                                                 else if ((current_x < command_x)&&(current_y > command_y)){
                                                     Cx = current_x + command_i;
                                                     Cy = current_y + command_j;
                                                     start_angle = 180*16 + qRound(atan2(command_j,command_i)*16*180/pi);
                                                     end_angle = 180*16 + qRound(atan2(Cy-command_y, Cx-command_x)*16*180/pi);
                                                 }
-                                                //  2кв.
+                                                //  2 q.
                                                 else {
                                                     Cx = current_x + command_i;
                                                     Cy = current_y - command_j;
                                                     start_angle = 180*16 - qRound(atan2(command_j,command_i)*16*180/pi);
                                                     end_angle = 180*16 - qRound(atan2(command_y-Cy, Cx-command_x)*16*180/pi);
                                                 }
-                                                //  прямоугольник, в который вписана дуга:
                                                 QRect arc_rect(Cx-R, Cy-R, R*2, R*2);
-                                                //  угол дуги:
                                                 span_angle = end_angle - start_angle;
-                                                //  проверка на выход значения угла дуги из диапазона 0..90градусов:
                                                 if (qAbs(span_angle)>90*16){
                                                     if (span_angle<0) span_angle = -90*16;
                                                     else {span_angle = 90*16;}
-//                                                        log << time.currentTime().toString() << " D01 command (region): warning! angle of Arc > 90 in SINGLE QUADRANT mode\n";
                                                 }
-                                                //  отрисовка дуги:
+                                                //  drawing arc:
                                                 contours.last()->arcTo(arc_rect,-start_angle/16, -span_angle/16);
                                             }
                                             else if (quadrant_mode == MULTI_QUADRANT){
-                                                //  координаты центра дуги:
                                                 int Cx = current_x + command_i;
                                                 int Cy = current_y + command_j;
-                                                //  прямоугольник, в который вписана дуга:
                                                 QRect arc_rect(Cx-R, Cy-R, R*2, R*2);
-                                                //  углы дуги:
                                                 start_angle = qRound(atan2(-command_j,-command_i)*16*180/pi);
                                                 end_angle = qRound(atan2(command_y-Cy, command_x-Cx)*16*180/pi);
                                                 norm_angle(&start_angle);
@@ -1089,23 +1044,23 @@ int Processor::process(){
                                                 else {
                                                     span_angle = end_angle - start_angle;
                                                 }
-                                                //  отрисовка дуги:
+                                                //  drawing arc:
                                                 contours.last()->arcTo(arc_rect,-start_angle/16, -abs(span_angle/16));
                                             }
                                             else {
-                                                //  Ошибка, режим квадранта не задан!
-                                                qDebug()<<"Ошибка! Quadrant mode в регионе не задан. Gerber-файл " << name_of_gerber_file << " не может быть обработан!";
+                                                //  Error!
+                                                qDebug()<<"Error! Quadrant mode is not set (in region). Gerber file " << name_of_gerber_file << " is invalid!";
                                                 finished();
                                                 return -1;
                                             }
                                         }
                                         else {
-                                            //  Ошибка, режим интерполяции не задан!
-                                            qDebug()<<"Ошибка! Interpolation mode в регионе не задан. Gerber-файл " << name_of_gerber_file << " не может быть обработан!";
+                                            //  Error!
+                                            qDebug()<<"Error! Interpolation mode is not set (in region). Gerber file " << name_of_gerber_file << " is invalid!";
                                             finished();
                                             return -1;
                                         }
-                                        //  обновление текущей точки координат..
+                                        //  updating current coordinates
                                         current_x = command_x;
                                         current_y = command_y;
                                         }break;
@@ -1114,12 +1069,12 @@ int Processor::process(){
                                             //   D02 for regions
                                             //
 //                                            current_d_code = 2;     //  deprecated mentor
-                                            //  является ли д02 концом контура? если да, то закрываем контур
+                                            //  is d02 the end of the contour? if yes, then close the contour
                                             check_for_G_in_D(str,&interpolation_mode); //   deprecated mentor...
                                             if (creating_contour_now == true){
                                                 end_of_contour = true;
                                             }
-                                            //  далее стандартная обработка команды
+                                            //  then standart processing of command
                                             if (str.contains('X')){
                                                     QString x_val;
                                                     bool minus=0;
@@ -1181,51 +1136,50 @@ int Processor::process(){
                                 }//end of if (str.contains("G"))
 
                                 //................................................
-
+                                // END OF REGION
                                 if (str.contains("G37")){
                                     end_of_contour = true;
                                     end_of_region = true;
-                                    //  добавление в цикле в общую картину всех контуров (qpainterpath) из массива contour, их закрашивание..
+                                    //  add all contours to image
                                     for (int i=0;i<contours.size();i++) {
                                         painter.fillPath(*contours.at(i),Qt::black);
                                         painter.drawPath(*contours.at(i));
                                     }
-                                    //  освобождение динамической памяти
+                                    //  free memory
                                     for (int i=0;i<contours.size();i++) {
                                         delete contours.at(i);
                                     }
-
-                                    //  восстановление глобальных настроек пера (апертура, polarity, и т д..)
+                                    //  restore global pen settings (aperture, polarity, etc..)
                                     painter.restore();
                                     break;
                                 }// end of if (str.contains("G37"))
 
-                            i++;    //  инкремент счетчика строк
+                            i++;    //  increment counter of strings
 
                             }// end of while (!end_of_contour)
                         }// end of while (!end_of_region)
 
                     }break;
+
                     case M02 :{
                     //----------
                     //   M02
                     //----------
-                        //успешное достижение конца файла
-//                        log << time.currentTime().toString() << " End of file!";
+                    //END OF FILE. nothing to do
                     }break;
-//                    default: log << time.currentTime().toString() << " Invalid command format: " << str_command.toUtf8() << "\n";
+
                 }//end of switch
             }//end of else if (str.contains("G")||str.contains("M"))
         }//end of else (if (str.contains("G04")))
 
-        //инкремент счетчика строки, новая итерация..
+        //increment counter of strings
         i++;
 
-    }//конец главного цикла, перебирающего строки в файле
+    }//end of main cycle
 
     //
     //
-    //  Сохранение QImage на диск в выбранном графическом формате
+    //  Save QImage
     //
     //
 
@@ -1234,34 +1188,27 @@ int Processor::process(){
     file.open(QIODevice::WriteOnly);
     if (image_format == "bmp"){
         if (!pxmp.save(&file,"BMP")) {
-            qDebug()<<"Ошибка! Gerber-файл " << name_of_gerber_file << ". Не удалось сохранить изображение!";
+            qDebug()<<"Error! Gerber file " << name_of_gerber_file << ". Can not save the image!";
             finished();
             return -4;
-        }         //  сохранения изображения в файле в формате BMP
+        }         //  save BMP
     }
     else if (image_format == "png"){
         if (!pxmp.save(&file,"PNG")){
-            qDebug()<<"Ошибка! Gerber-файл " << name_of_gerber_file << ". Не удалось сохранить изображение!";
+            qDebug()<<"Error! Gerber file " << name_of_gerber_file << ". Can not save the image!";
             finished();
             return -4;
-        }         //  сохранения изображения в файле в формате PNG
+        }         //  save PNG
     }
 
     //
-    //  Освобождение динамической памяти от словарей
+    //  Free memory
     //
     aperture_dictionary.clear();
     am_template_dictionary.clear();
-//    for (int i=0;i<aperture_dictionary.size();i++) {
-//        delete aperture_dictionary.at(i);
-//    }
-//    for (int i=0;i<am_template_dictionary.size();i++) {
-//        delete am_template_dictionary.at(i);
-//    }
 
-//        log_file.close();   //  закрытие файла с логами
-        finished();         //  сигнал для главного окна приложения
-    return 1;               //  успешное завершения обработки гербер-файла
+    finished();
+    return 1;           // File succesfully processed
 
 }
 
@@ -1372,7 +1319,6 @@ void Processor::get_outline_size(double *width, double *height, double *dx, doub
 
     for (int i=0;i<list_of_strings_of_gerber.size();i++) {
         str = list_of_strings_of_gerber.at(i);
-//        minus=false;
         //
         //  X
         //
@@ -1418,7 +1364,6 @@ void Processor::get_outline_size(double *width, double *height, double *dx, doub
             }
         }
     }
-    // В результате:
 
     *dx = double(min_x)/dpi;
     *dy = double(min_y)/dpi;

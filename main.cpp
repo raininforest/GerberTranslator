@@ -14,20 +14,20 @@ int main(int argc, char *argv[])
     was_update_succesfull = update();
     switch (was_update_succesfull) {
     case -1:{
-        qDebug()<< "Не удалось обновить текущую версию программы! Будет запущена старая версия...";
+        qDebug()<< "Failed to update the current version of the program! The old version will be launched...";
     } break;
     case 1:{
-        qDebug()<< "Текущая версия программы будет обновлена!";
+        qDebug()<< "Current version will be updated!";
     } return 1;
     case 2:{
-        qDebug()<< "Обновление не требуется!";
+        qDebug()<< "No update required!";
     } break;
     }
 
     QApplication a(argc, argv);
 
     QQmlApplicationEngine engine;
-    controller c;       // создание контроллера
+    controller c;
     engine.rootContext()->setContextProperty("controller",&c);
     const QUrl url(QStringLiteral("qrc:/main.qml"));
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
     }, Qt::QueuedConnection);
     engine.load(url);
 
-    QObject *mainwindow = engine.rootObjects().at(0); //объект главного окна qml
+    QObject *mainwindow = engine.rootObjects().at(0);
 
     QObject::connect(&c,SIGNAL(message(QVariant)),mainwindow,SLOT(show_message(QVariant)));
     QObject::connect(&c,SIGNAL(ready_to_init()),mainwindow,SLOT(set_ini_parameters()));

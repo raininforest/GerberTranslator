@@ -9,48 +9,48 @@
 class Aperture
 {
 
-    am_template* my_am_template;    //  указатель на макрошаблон, определенный в AM
+    am_template* my_am_template;    //  macro template pointer
 
-    //  Параметры апертуры:
-    int d_code = -1;                //  номер апертуры
-    QString name_of_template = "";  //  имя шаблона апертуры
-    QString type_of_template = "";  //  STANDART_C, R, O, P or MACRO
-    QString modifiers = "";         //  строка с параметрами, необходимыми для рисования(размеры и т д).
-    QStringList mod_list;           //  строковый массив параметров по отдельности, разделенных "Х"
+    //Aperure properties:
+    int d_code = -1;                //  aperture number
+    QString name_of_template = "";  //  aperture name
+    QString type_of_template = "";  //  aperture type: STANDART_C, R, O, P or MACRO
+    QString modifiers = "";         //  aperture modifiers
+    QStringList mod_list;           //  aperture modifiers (split by 'X')
 
-    //  Формат координат:
-    int x_int;  //  количество разрядов под целую часть
-    int x_dec;  //  количество разрядов под дробную часть
-    int y_int;  //  количество разрядов под целую часть
-    int y_dec;  //  количество разрядов под дробную часть
+    //Format:
+    int x_int;
+    int x_dec;
+    int y_int;
+    int y_dec;
 
     struct primitive_struct{
-        QPainterPath path;                  //  изображение примитива
-        float rotation = 0;                 //  угол поворота
-        bool std_aperture = 1;              //  флаг стандартной апертуры (если 1 - не нужно брать угол и вращать)
+        QPainterPath path;                  //  primitive image
+        float rotation = 0;                 //  angle
+        bool std_aperture = 1;              //  stanfart aperture flag (is rotation needed)
     };
 
-    QList <primitive_struct> primitives;    //список примитивов для макрошаблона
+    QList <primitive_struct> primitives;    // all primitives, if this is macro aperture
 
     struct variable{
-        int index=0;    //имя (номер) переменной в гербере
-        float value=0;  //значение переменной
+        int index=0;    //  variable name (number)
+        float value=0;  //  value of variable
     };
 
-    //  вычисление выражения в модификаторах описания примитива из макро-шаблона
+    //function for calculation arithmetic expressions in modifiers
     float calculate_expression(const QString expression, QList<variable>* dict);
 
 public:
-    //  конструктор:
+
     Aperture(const int d_code_number_of_aperture = 0, const QString name_of_temp = "", const QString type_of_temp = "", const QString modifs = "", am_template* am_temp = nullptr);
 
-    int get_d_code();                   //  получить номер апертуры
-    QString get_name();                 //  получить имя апертуры
-    QString get_type();                 //  получить тип апертуры (4 типа стандартных или макро)
+    int get_d_code();
+    QString get_name();
+    QString get_type();
 
-    void create(const int dpi);                                         //  создание апертуры
-    int draw_me(const int x_pos, const int y_pos, QPainter* painter);   //  отрисовка изображения апертуры
-    int get_std_circ_dia_in_px(const int dpi);                          //  получить диаметр стандартной апертуры-окружности для рисования линий
+    void create(const int dpi);                                         //  creation of aperure image
+    int draw_me(const int x_pos, const int y_pos, QPainter* painter);   //  flashing this aperture
+    int get_std_circ_dia_in_px(const int dpi);                          //  getting diameter (if this is standart circle aperture) for drawing operations
 
 };
 

@@ -6,11 +6,10 @@ controller::controller()
 }
 
 void controller::load_ini_file(){
-    //  Чтение файла настроек, инициализация...
     QFile file("gerber_translator.ini");
     QStringList strings_of_ini;
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)){
-        emit message("Не найден gerber_translator.ini. Будет создан новый файл.");
+        emit message("gerber_translator.ini not found. New file will be created.");
     }
     else {
         while (!file.atEnd()) {
@@ -35,7 +34,7 @@ void controller::load_ini_file(){
                         m_dpi_ini = pre_dpi;
                     }
                     else {
-                        emit message("Невозможно установить разрешение из файла настроек gerber_translator.ini!\n Будет установлено значение по умолчанию.");
+                        emit message("Cannot set resolution from gerber_translator.ini!\nThe default value will be set.");
                     }
                 }
                 else if (str.contains("quick_translation")) {
@@ -79,14 +78,11 @@ void controller::run_all()
 {
     if ((QDir(m_save_path_ini).exists())&&(!m_save_path_ini.isEmpty())){
 
-        // Особождение динамической памяти
         for (int i=0; i<threads.size(); i++){
             delete threads.at(i).future_handle;
             delete threads.at(i).processor_handle;
         }
-        //  Сброс счетчика потоков
         count_of_finished_processes = 0;
-        // Очищение спика потоков
         threads.clear();
 
         thread_struct thread;
@@ -101,18 +97,17 @@ void controller::run_all()
         QString outline_name;
         double w = m_default_image_width_ini.toDouble(), h = m_default_image_height_ini.toDouble(), dx = m_default_dx_ini.toDouble(), dy = m_default_dy_ini.toDouble();   //размеры платы и смещение начала координат по умолчанию...
 
-        //  поиск в списке загруженных герберов файла с ".board",
-        //  чтобы рассчитать размеры (платы) изображения для всех загруженных герберов по контуру.
+        //  try to find filename containing ".board",
         for (int i=0;i<list_of_gerbers.size();i++) {
             if (list_of_gerbers.at(i).contains(".board")){
                 p = new Processor(1);
                 p->set_frame_thickness(m_frame_thickness_ini.toDouble());
-                p->set_dpi(m_dpi_ini.toInt());     //  утстановка пользовательского разрешения в dpi
+                p->set_dpi(m_dpi_ini.toInt());
                 p->set_image_format(m_image_format_ini);
                 p->set_paths(list_of_gerbers.at(i),m_save_path_ini);
-                p->load_file();      //  загрузка файла в память
+                p->load_file();
                 if (m_image_size_ini=="by_outline"){
-                    p->get_outline_size(&w, &h, &dx, &dy);           //  рассчет ширины и высоты рисунка, а также смещения начала координат (например, оно в центре круглой платы)
+                    p->get_outline_size(&w, &h, &dx, &dy);
                 }
                 if ((m_opacity_mode_ini=="on")&&(m_image_format_ini=="png")){
                     p->set_opacity_value(m_opacity_value_ini.toFloat());
@@ -120,7 +115,7 @@ void controller::run_all()
                 outline_name = p->get_outline_filename();
                 p->set_w_h_dx_dy(w,h,dx,dy);
 
-                // обработка:
+                // starting new thread:
                 future = new QFuture<int>;
                 thread.future_handle = future;
                 thread.processor_handle = p;
@@ -137,12 +132,11 @@ void controller::run_all()
                     everything_was_ok = false;
                     break;
                 }
-                break; // т.к. нашелся контур платы - выход из цикла
+                break;
             }
         }
 
-        //  Цикл обработки всех загруженных файлов, кроме файла контура - формирование изображения
-        //  Если обработка файла контура прошла успешно
+        //  starting processing of all files, if outline was processed succesfully
         if ((at_least_one_done)||(m_image_size_ini=="by_ini")){
             for (int i=0; i<list_of_gerbers.size(); i++) {
                 if (!(list_of_gerbers.at(i).contains(".board"))){
@@ -152,14 +146,14 @@ void controller::run_all()
                     p->set_dpi(m_dpi_ini.toInt());
                     p->set_image_format(m_image_format_ini);
                     p->set_paths(list_of_gerbers.at(i),m_save_path_ini);
-                    p->load_file();                                                  //  загрузка файла в память
+                    p->load_file();
                     if ((m_opacity_mode_ini=="on")&&(m_image_format_ini=="png")){
                         p->set_opacity_value(m_opacity_value_ini.toFloat());
                     }
-                    p->set_outline_file_name(outline_name); //  установка пути к изображению контура
+                    p->set_outline_file_name(outline_name);
                     p->set_w_h_dx_dy(w,h,dx,dy);
 
-                    //обработка:
+                    // starting new thread:
                     future = new QFuture<int>;
                     thread.future_handle = future;
                     thread.processor_handle = p;
@@ -171,17 +165,16 @@ void controller::run_all()
             }//end of for
         }
         else {
-            emit processing_done("Файлы не будут обработаны, т.к. не обработан файл контура!");
+            emit processing_done("Files will not be processed because outline file not processed!");
         }
     } // end of if
     else {
-        //  Выдача сообщения об ошибке
-        emit processing_done("Указанный каталог не существует!");
+        emit processing_done("The specified directory for saving images does not exist!");
     }
 }
 
 void controller::process_finished(){
-    int i = 0;  // индекс процесса, который послал сигнал в этот слот.
+    int i = 0;  // index of process sending signal to that slot
 
     for (int j=0; j<threads.size(); j++){
         if (threads.at(j).processor_handle == QObject::sender()){
@@ -200,13 +193,13 @@ void controller::process_finished(){
         everything_was_ok = false;
         QString err_msg;
         if (return_code == -3){
-            err_msg = "Ошибка!\nФайл " + list_of_gerbers.at(threads.at(i).widget_index) + " не обработан.\nВозможно, файл слишком большой и недостаточно памяти для его обработки.";
+            err_msg = "Error!\nFile " + list_of_gerbers.at(threads.at(i).widget_index) + " is not processed.\nImage may be too large and not enough memory to process it.";
         }
         else if (return_code == -4) {
-            err_msg = "Ошибка!\nФайл " + list_of_gerbers.at(threads.at(i).widget_index) + " не удается сохранить.\nВозможно, файл слишком большой и недостаточно памяти для его обработки.";
+            err_msg = "Error!\nImage for file " + list_of_gerbers.at(threads.at(i).widget_index) + " can not be saved.\nIt may be too large and not enough memory to process it.";
         }
         else {
-            err_msg = "Ошибка!\nФайл " + list_of_gerbers.at(threads.at(i).widget_index) + " не обработан.\nФайл не существует или неверный тип файла.";
+            err_msg = "Error!\nFile " + list_of_gerbers.at(threads.at(i).widget_index) + " is not processed.\nFile does not exist or file type is incorrect.";
         }
         emit message(err_msg);
     }
@@ -216,13 +209,13 @@ void controller::process_finished(){
     if (count_of_finished_processes==list_of_gerbers.size()) {
 
         if (everything_was_ok) {
-            emit processing_done("Обработка файлов успешно завершена!");
+            emit processing_done("Translation is finished succesfully!");
         }
         else if (at_least_one_done) {
-            emit processing_done("Обработка файлов завершена c ошибками!");
+            emit processing_done("Translation is finished with errors!");
         }
         else {
-            emit processing_done("Ошибка! Ни один файл не обработан!");
+            emit processing_done("Error! No file processed!");
         }
 
         if ((m_open_folder_after_processing_ini=="on")&&at_least_one_done) {
@@ -232,8 +225,7 @@ void controller::process_finished(){
 
             QFile loc_version_file(local_ver_file_name);
             if(!loc_version_file.open(QIODevice::ReadOnly | QIODevice::Text)){
-                qDebug()<<"Невозможно открыть локальный файл версии!";
-                //сообщение об ошибке
+                qDebug()<<"Can not open local version file!";
             }
             while (!loc_version_file.atEnd()){
                 QByteArray str = loc_version_file.readLine().trimmed();
@@ -258,20 +250,17 @@ void controller::process_finished(){
     }
 }
 
-void controller::prepare_for_exit(){
-    // Особождение динамической памяти
+void controller::prepare_for_exit(){    
         for (int i=0; i<threads.size(); i++){
             delete threads.at(i).future_handle;
             delete threads.at(i).processor_handle;
         }
 
-        //  Запись файла настроек перед закрытием...
+        //  Write settings file before exit..
         QFile file("gerber_translator.ini");
         if (!file.open(QIODevice::WriteOnly | QIODevice::Text)){
-            //            ui->listWidget->addItem("Error opening gerber_translator.ini!");
             emit message("Error opening gerber_translator.ini for writing!");
-            emit ready_to_exit();
-            //  сообщение об ошибке чтения файла с настройками
+            emit ready_to_exit();            
         }
         else{
 

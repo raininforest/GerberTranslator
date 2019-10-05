@@ -3,6 +3,7 @@
 am_template::am_template(const QString name_of_macro, const QStringList data_blocks)
 {
     all_data_blocks = data_blocks;
+
     name = name_of_macro;
 }
 

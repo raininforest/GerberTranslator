@@ -74,9 +74,8 @@ class controller: public QObject
 public:
     controller();
 
-        //  глобальный список обрабатываемых файлов
-    void load_ini_file();
-    QStringList list_of_gerbers;
+    void load_ini_file();           // loading global parameters from gerber_translator.ini
+    QStringList list_of_gerbers;    // global path-list of gerber-files
 
     QString m_open_path_ini="";
     QString m_save_path_ini="";
@@ -92,7 +91,7 @@ public:
     QString m_default_dx_ini="0";
     QString m_default_dy_ini="0";
     QString m_frame_thickness_ini="1";
-    QString m_gerbers_string;
+    QString m_gerbers_string;       //global path-list of gerber-files by one string
 
 
     QString open_path_ini() const {return m_open_path_ini;}
@@ -134,18 +133,18 @@ public:
 private:
 
     struct thread_struct{
-        QFuture<int>* future_handle;    // указатель на поток
-        Processor* processor_handle;    // указатель на объект
-        int widget_index;
+        QFuture<int>* future_handle;    // thread pointer
+        Processor* processor_handle;    // processor object pointer
+        int widget_index;               // index of item in listWidget
     };
 
-    QList<thread_struct> threads;       // список потоков для обработки
-    int count_of_finished_processes = 0;// счетчик завершившихся потоков
+    QList<thread_struct> threads;       // thread list
+    int count_of_finished_processes = 0;
     int count_of_gerbers = 0;
     int return_code=-1;
 
-    bool everything_was_ok;             // флаг: все файлы были корректно обработаны
-    bool at_least_one_done;             // флаг: хотя бы один файл был обработан
+    bool everything_was_ok;             // all files were processed succesfully
+    bool at_least_one_done;             // at least one file was done
 
 signals:
 
@@ -165,30 +164,30 @@ signals:
     void frame_thickness_ini_Changed();
     void gerbers_string_Changed();
 
-    //генерируется после чтения инифайла
+    //ini file was read
     void ready_to_init();
 
-    //во время обработки приращение прогресса
+    //for increasing progressbar
     void increase_progress(QVariant);
 
-    //при необходимости показать диалог с сообщением
+    //send message
     void message(QVariant);
 
-    //признак конца текущей обработки всех файлов
+    //processing done
     void processing_done(QVariant);
 
-    //данные сохранены, память освобождена - можно закрывать приложение
+    //data was saved, memory is free, ready to close
     void ready_to_exit();
 
 private slots:
 
-    //принятие команды старт обработки от окна
-    void run_all();//передать структуру с параметрами
+    //processing of all files
+    void run_all();
 
-    //когда пришел сигнал завершения от одного из запущенных процессов обработки
+    //when one of processes was finished
     void process_finished();
 
-    //при закрытии окна. сначала нужно сохранить настройки в файл.
+    //saving data before exit
     void prepare_for_exit();
 
     void set_list_of_gerbers_from_QML_string(){

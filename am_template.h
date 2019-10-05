@@ -6,9 +6,8 @@
 class am_template
 {
 
-    QString name;                // имя макро шаблона
-    QStringList all_data_blocks; // строковый массив из дата блоков, которые описывают макро шаблон
-
+    QString name;                // name of macro template
+    QStringList all_data_blocks; // datablocks of macro template
 public:
 
     am_template(const QString name_of_macro, const QStringList data_blocks);
