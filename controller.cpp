@@ -94,10 +94,25 @@ void controller::run_all()
 
         everything_was_ok = true;
         at_least_one_done = false;
+        bool outline_was_found = false;
         QString outline_name;
         double w = m_default_image_width_ini.toDouble(), h = m_default_image_height_ini.toDouble(), dx = m_default_dx_ini.toDouble(), dy = m_default_dy_ini.toDouble();   //размеры платы и смещение начала координат по умолчанию...
 
+        //  removing duplicates ".board"
+        for (int i =0; i<list_of_gerbers.size(); i++){
+            if (list_of_gerbers.at(i).contains(".board")){
+                if (outline_was_found){
+                    emit message("Duplicate of outline files detected!\nFile " + list_of_gerbers.at(i) + " will not be translated.");
+                    list_of_gerbers.removeAt(i);
+                }
+                else {
+                    outline_was_found=true;
+                }
+            }
+        }
+
         //  try to find filename containing ".board",
+
         for (int i=0;i<list_of_gerbers.size();i++) {
             if (list_of_gerbers.at(i).contains(".board")){
                 p = new Processor(1);
@@ -135,6 +150,8 @@ void controller::run_all()
                 break;
             }
         }
+
+
 
         //  starting processing of all files, if outline was processed succesfully
         if ((at_least_one_done)||(m_image_size_ini=="by_ini")){
