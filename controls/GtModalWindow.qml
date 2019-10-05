@@ -75,7 +75,7 @@ Window{
         GtCheckBox {
             id: transparent_img_chckbox
             checked: transparent_img_chckbox_checked
-            text: qsTr("Semitransparent image")
+            text: qsTr("Semitransparent image (png only)")
             checkbox_color: main_color
             onCheckedChanged: transparent_img_chckbox_checked=checked
         }
