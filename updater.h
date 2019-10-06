@@ -7,6 +7,7 @@
 #include <QDebug>
 #include <QProcess>
 
+//main function
 int update();
 
 #endif // UPDATER_H

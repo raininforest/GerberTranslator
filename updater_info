@@ -1,3 +1,15 @@
+The application has its own updater, which checks for updates every time it starts.
+For the gt_u updater to work, 2 service files are needed in the program folder:
+1. path - the file contains the path to the repository with the current version. storage path with
+the current version should look like this ../windows/gerber_translator_32
+or ../linux/gerber_translator_64
+2. gt_version - this file should be contained in the folder with the user program,
+and in the folder with the current version of the program. example content:
+
+version=1.9
+platform=windows
+bit=64
+
 Приложение имеет свой апдейтер, который проверяет наличие обновлений при каждом запуске.
 Для работы апдейтера gt_u необходимы 2 служебных файла в папке с программой:
 1. path - файл содержит путь к хранилищу с актуальной версией. путь к хранилищу с
