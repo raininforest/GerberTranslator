@@ -4,41 +4,35 @@
 #include <QProcess>
 #include <iostream>
 
-//аргументы:
-//argv[1] - путь к локальному файлу версии
-//argv[2] - строка с номером актуальной версии
-//argv[3] - путь к локальной версии программы
-//argv[4] - путь к актуальной версии программы
-
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
     if (argc<5){
-        std::cout << "Недостаточно параметров командной строки для запуска обновления!\n";
+        std::cout << "Not enough command line options to run updates!\n";
         return -1;
     }
 
-    std::cout << "Обновление версии...\n";
+    std::cout << "Updating...\n";
 
     QString platform;
     QString bit;
 
     QString local_ver_file_name = argv[1];
-    QString actual_version_text = argv[2];          //эту строку запишем в локальный файл с версией в случае успешного обновления
+    QString actual_version_text = argv[2];
     QString local_app_path = argv[3];
     QString actual_app_path = argv[4];
 
     if (local_ver_file_name.isEmpty()) {
-        std::cout << "Ошибка! Пустой путь локального файла версии.\n";
+        std::cout << "Error! Empty local version file path.\n";
         return -1;
     }
     if (local_app_path.isEmpty()) {
-        std::cout << "Ошибка! Пустой путь локальной версии приложения.\n";
+        std::cout << "Error! Empty local application path.\n";
         return -1;
     }
     if (actual_app_path.isEmpty()) {
-        std::cout << "Ошибка! Пустой путь актуальной версии приложения.\n";
+        std::cout << "Error! Empty actual application path.\n";
         return -1;
     }
 
@@ -48,28 +42,28 @@ int main(int argc, char *argv[])
 
     if (actual_app.exists()&&local_app.exists()){
         local_app.rename("old_version_app.exe");
-        std::cout << "Переименование старой версии...\n";
+        std::cout << "Rename old version...\n";
         if (!(actual_app.copy(local_app_path))){
-            std::cout << "Ошибка копирования новой версии!\n";
+            std::cout << "Can not copy new version of application!\n";
             local_app.rename(local_app_path);
             return -1;
         }
-        std::cout << "Копирование прошло успешно!\n";
+        std::cout << "Copy was successful!\n";
         if (local_app.remove()){
-            std::cout << "Старая версия программы удалена!\n";
+            std::cout << "Old version was removed!\n";
         }
         else {
-            std::cout << "Невозможно удалить старую версию программы!\n";
+            std::cout << "Can not delete old version!\n";
         }
 
     }
     else {
-        std::cout << "Ошибка! Не найдена либо локальная либо актуальная версия приложения.\n";
+        std::cout << "Error! Either the local or current version of the application was not found.\n";
         return -1;
     }
 
     if(!loc_version_file.open(QIODevice::ReadOnly | QIODevice::Text)){
-        std::cout << "Ошибка открытия локального файла версии для чтения!\n";
+        std::cout << "Can not read local version file!\n";
         return -1;
     }
     while (!loc_version_file.atEnd()){
@@ -85,16 +79,17 @@ int main(int argc, char *argv[])
     }
     loc_version_file.close();
     if(!loc_version_file.open(QIODevice::WriteOnly | QIODevice::Text)){
-        std::cout << "Ошибка открытия локального файла версии для записи!\n";
+        std::cout << "Can not write local version file!\n";
         return -1;
     }
     loc_version_file.write("version="+actual_version_text.toUtf8()+'\n');
     loc_version_file.write("platform="+platform.toUtf8()+'\n');
     loc_version_file.write("bit="+bit.toUtf8()+'\n');
     loc_version_file.close();
-    std::cout << "Обновление успешно завершено.\n";
+    std::cout << "Update completed successfully!\n";
+    std::cout << "Launching new version...\n";
     QProcess main_app;
     main_app.startDetached(local_app_path);
     return 1;
-//    return a.exec();
+
 }
