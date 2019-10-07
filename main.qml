@@ -91,7 +91,7 @@ Window {
 
     id: window
     visible: true
-    minimumWidth: 850
+    minimumWidth: 1000
     height: 480
     title: qsTr("Gerber-translator")
     color: back_color
@@ -161,7 +161,6 @@ Window {
         id: save_dialog
         onAccepted: {
             controller.save_path_ini=folder.toString()
-            console.log("save folder to string:"+controller.save_path_ini)
             save_path.text=controller.save_path_ini
         }
     }
@@ -242,7 +241,7 @@ Window {
                 down_color: main_color
                 up_color: back_color
                 border_color: main_color
-                onClicked: show_message("Gerber translator.\n\nVersion: 1.10.\nRelease date: 01.10.2019\nAuthor: Velesko S.A.")
+                onClicked: show_message("Gerber translator.\n\nVersion: 1.10.\nRelease date: 07.10.2019\nAuthor: Velesko S.A.")
             }
             GtButton{
                 id: exit_button
