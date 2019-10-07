@@ -1,5 +1,5 @@
 #include "controller.h"
-#include "updater.h"
+//#include "updater.h"
 #include <QApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
@@ -8,20 +8,20 @@
 
 int main(int argc, char *argv[])
 {    
-    // запуск апдейта
-    int was_update_succesfull = 0;
-    was_update_succesfull = update();
-    switch (was_update_succesfull) {
-    case -1:{
-        qDebug()<< "Failed to update the current version of the program! The old version will be launched...";
-    } break;
-    case 1:{
-        qDebug()<< "Current version will be updated!";
-    } return 1;
-    case 2:{
-        qDebug()<< "No update required!";
-    } break;
-    }
+
+//    int was_update_succesfull = 0;
+//    was_update_succesfull = update();
+//    switch (was_update_succesfull) {
+//    case -1:{
+//        qDebug()<< "Failed to update the current version of the program! The old version will be launched...";
+//    } break;
+//    case 1:{
+//        qDebug()<< "Current version will be updated!";
+//    } return 1;
+//    case 2:{
+//        qDebug()<< "No update required!";
+//    } break;
+//    }
 
     QApplication a(argc, argv);
 

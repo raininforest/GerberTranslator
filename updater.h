@@ -1,13 +1,13 @@
-#ifndef UPDATER_H
-#define UPDATER_H
+//#ifndef UPDATER_H
+//#define UPDATER_H
 
-#include <QFile>
-#include <QFileInfo>
-#include <QString>
-#include <QDebug>
-#include <QProcess>
+//#include <QFile>
+//#include <QFileInfo>
+//#include <QString>
+//#include <QDebug>
+//#include <QProcess>
 
-//main function
-int update();
+////main function
+//int update();
 
-#endif // UPDATER_H
+//#endif // UPDATER_H
