@@ -76,7 +76,10 @@ void controller::load_ini_file(){
 
 void controller::run_all()
 {
-    if ((QDir(m_save_path_ini).exists())&&(!m_save_path_ini.isEmpty())){
+    QUrl savepath(m_save_path_ini);
+    QString savepath_not_url = savepath.toLocalFile();
+
+    if ((QDir(savepath_not_url).exists())&&(!savepath_not_url.isEmpty())){
 
         for (int i=0; i<threads.size(); i++){
             delete threads.at(i).future_handle;

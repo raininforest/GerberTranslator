@@ -4,6 +4,7 @@
 #include <QString>
 #include <QStringList>
 #include <QPainter>
+#include <QUrl>
 #include "aperture.h"
 
 class Processor : public QObject

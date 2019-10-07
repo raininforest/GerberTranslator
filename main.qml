@@ -28,8 +28,8 @@ Window {
         msg_dialog.y=(window.height-msg_dialog.height)/2+window.y
     }
     function set_ini_parameters(){
-        open_dialog.folder="file://"+controller.open_path_ini
-        save_dialog.folder="file://"+controller.save_path_ini
+        open_dialog.folder=controller.open_path_ini
+        save_dialog.folder=controller.save_path_ini
         save_path.text=controller.save_path_ini
         dpi_combo.currentIndex=dpi_combo.find(controller.dpi_ini)
         format_combo.currentIndex=format_combo.find(controller.image_format_ini)
@@ -77,18 +77,17 @@ Window {
         window.close()
     }
 
-    // Convert URL to path function
-    function urlToPath(urlpath){
-        var f_path=urlToPath
-        if(f_path.startsWith("file://")){
-            f_path.replace("file://","")
-        }
-        else {
-            f_path.replace("file:///","")
-        }
-        return f_path
-    }
-
+//    // Convert URL to path function
+//    function urlToPath(urlpath){
+//        var f_path=urlToPath
+//        if(f_path.startsWith("file://")){
+//            f_path.replace("file://","")
+//        }
+//        else {
+//            f_path.replace("file:///","")
+//        }
+//        return f_path
+//    }
 
     id: window
     visible: true
@@ -146,10 +145,10 @@ Window {
             text_area.clear()
             count_of_files=open_dialog.files.length
             for (var i=0;i<count_of_files; i++){
-                text_area.append(open_dialog.files[i].toString().replace("file://",""))
+                text_area.append(open_dialog.files[i].toString())
             }
             controller.gerbers_string=text_area.text
-            controller.open_path_ini=folder.toString().replace("file://","")
+            controller.open_path_ini=folder.toString()
             text_anim.running=true
             bottom_controls_anim.running=true
             bot_row_layout.enabled=true
@@ -163,7 +162,7 @@ Window {
     GtFolderDialog{
         id: save_dialog
         onAccepted: {
-            controller.save_path_ini=folder.toString().replace("file://","")
+            controller.save_path_ini=folder.toString()
             console.log("save folder to string:"+controller.save_path_ini)
             save_path.text=controller.save_path_ini
         }

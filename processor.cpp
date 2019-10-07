@@ -16,10 +16,11 @@ Processor::Processor(const bool is_outline)
 
 void Processor::set_paths(const QString gerber_file, const QString output_folder){
 
+    QUrl gerb_url(gerber_file),save_url(output_folder);
     QString extension = "." + image_format;
-    name_of_gerber_file = gerber_file;
-    output_folder_path = output_folder;
-    name_of_output_file = output_folder + gerber_file.right(gerber_file.size() - gerber_file.lastIndexOf('/')) + extension;
+    name_of_gerber_file = gerb_url.toLocalFile();
+    output_folder_path = save_url.toLocalFile();
+    name_of_output_file = output_folder_path + name_of_gerber_file.right(name_of_gerber_file.size() - name_of_gerber_file.lastIndexOf('/')) + extension;
 
 }
 
