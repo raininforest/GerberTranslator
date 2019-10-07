@@ -3,7 +3,6 @@ import QtQuick.Window 2.12
 import Qt.labs.platform 1.1
 import QtQuick.Layouts 1.3
 import QtQuick.Controls 2.12
-import QtQuick.VirtualKeyboard 2.4
 import "controls"
 
 Window {
@@ -76,6 +75,18 @@ Window {
     }
     function exit_slot(){
         window.close()
+    }
+
+    // Convert URL to path function
+    function urlToPath(urlpath){
+        var f_path=urlToPath
+        if(f_path.startsWith("file://")){
+            f_path.replace("file://","")
+        }
+        else {
+            f_path.replace("file:///","")
+        }
+        return f_path
     }
 
 
