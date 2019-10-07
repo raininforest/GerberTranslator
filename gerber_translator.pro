@@ -51,7 +51,7 @@ HEADERS += \
 
 FORMS +=
 
-#RC_ICONS = config/icon.ico
+RC_ICONS = config/icon.ico
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
