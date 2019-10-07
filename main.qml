@@ -96,7 +96,7 @@ Window {
     title: qsTr("Gerber-translator")
     color: back_color
     opacity: 1
-    flags: Qt.FramelessWindowHint
+    flags: Qt.FramelessWindowHint | Qt.Window
 
 
     OpacityAnimator {
@@ -120,8 +120,6 @@ Window {
         id: msg_dialog
         title: "Gerber-translator"
         visible: false
-//        x: (window.width-width)/2+window.x
-//        y: (window.height-height)/2+window.y
     }
 
 
