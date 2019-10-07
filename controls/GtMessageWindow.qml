@@ -28,7 +28,7 @@ Window{
     Rectangle{
         border.color: main_color
         border.width: 1
-        anchors.fill: parent
+        anchors.fill: msg_column
     }
     ColumnLayout {
         id: msg_column
