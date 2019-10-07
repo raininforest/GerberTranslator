@@ -259,7 +259,7 @@ void controller::process_finished(){
 
             if (platform=="windows"){
                 QProcess process(this);
-                process.startDetached("explorer " + m_save_path_ini.replace(('/'),('\\')));
+                process.startDetached("explorer " + m_save_path_ini);
             }
             else if (platform=="linux") {
                 QProcess process(this);
